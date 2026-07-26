@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rosary Companion - AppADay 080</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top:#241b3a;
+    --bg-bot:#100b1e;
+    --panel:rgba(255,255,255,0.028);
+    --vellum:#f2e8cf;
+    --vellum-soft:#e6dcc2;
+    --gold:#f0c96b;
+    --gold-deep:#c99a3f;
+    --lapis:#8ea3ea;
+    --lapis-deep:#5866a8;
+    --muted:#9a92b8;
+    --muted-2:#6f6892;
+    --line:rgba(240,201,107,0.16);
+    --future:#39335a;
+    --ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:"EB Garamond",Georgia,serif;
+    --display:"Cormorant Garamond","EB Garamond",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    min-height:100dvh;
+    font-family:var(--serif);
+    color:var(--vellum);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #2e2350 0%, rgba(46,35,80,0) 55%),
+      linear-gradient(178deg, var(--bg-top) 0%, var(--bg-bot) 78%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .shell{min-height:100dvh;display:flex;flex-direction:column;max-width:1080px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+  /* ---- top bar ---- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 2px 6px;flex-shrink:0}
+  .brand{font-family:var(--ui);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-2);text-decoration:none}
+  .brand b{color:var(--gold-deep);font-weight:600}
+  .brand:hover{color:var(--muted)}
+  .topbar-act{font-family:var(--ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);background:none;border:0;cursor:pointer;padding:8px;border-radius:8px}
+  .topbar-act:hover{color:var(--gold)}
+
+  /* ---- screens ---- */
+  .screen{flex:1;display:none;flex-direction:column;animation:rise .5s ease both}
+  .screen.on{display:flex}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* =====================  HOME  ===================== */
+  #home{align-items:center;justify-content:center;text-align:center;padding:14px 0 34px;gap:0}
+  .wordmark{font-family:var(--display);font-weight:500;font-size:clamp(38px,9vw,64px);line-height:.98;letter-spacing:.005em}
+  .wordmark .amp{display:block;font-style:italic;color:var(--gold);font-size:.72em;margin-bottom:-.06em}
+  .tagline{font-family:var(--ui);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted-2);margin-top:14px}
+  .today{margin-top:26px;font-family:var(--display);font-size:clamp(19px,4.4vw,24px);color:var(--vellum-soft)}
+  .today em{font-style:italic;color:var(--gold)}
+  .today .wk{font-family:var(--ui);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+  .today .note{display:block;margin-top:9px;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--muted);letter-spacing:.01em}
+
+  .sets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:440px;margin-top:24px}
+  .set-card{position:relative;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 15px;cursor:pointer;transition:border-color .25s,background .25s,transform .15s;color:inherit;font:inherit}
+  .set-card:hover{background:rgba(255,255,255,0.05)}
+  .set-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .set-card .sname{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:.01em}
+  .set-card .sdays{font-family:var(--ui);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-top:3px}
+  .set-card[aria-pressed="true"]{border-color:var(--gold);background:rgba(240,201,107,0.09)}
+  .set-card[aria-pressed="true"] .sname{color:var(--gold)}
+  .set-card .badge{position:absolute;top:12px;right:12px;font-family:var(--ui);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bg-bot);background:var(--gold);padding:3px 7px;border-radius:20px;font-weight:600}
+
+  .preview{width:100%;max-width:440px;margin-top:18px;text-align:left;border-top:1px solid var(--line);padding-top:16px}
+  .preview h4{font-family:var(--ui);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted-2);font-weight:400;margin-bottom:10px}
+  .preview ol{list-style:none;counter-reset:m}
+  .preview li{counter-increment:m;font-family:var(--serif);font-size:17px;color:var(--vellum-soft);padding:5px 0 5px 30px;position:relative;line-height:1.3}
+  .preview li::before{content:counter(m,upper-roman);position:absolute;left:0;top:5px;font-family:var(--ui);font-size:10px;letter-spacing:.05em;color:var(--gold-deep);width:22px;text-align:right;padding-top:2px}
+
+  .home-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px;margin-top:26px}
+
+  /* ---- buttons ---- */
+  .btn{font-family:var(--ui);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--vellum);padding:15px 20px;border-radius:12px;cursor:pointer;transition:transform .12s,background .2s,border-color .2s,color .2s}
+  .btn:hover{border-color:var(--gold-deep);color:var(--gold)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn-primary{background:linear-gradient(180deg,#f4d488,#e0b354);color:#241a08;border-color:transparent;box-shadow:0 8px 24px -12px rgba(240,201,107,.7)}
+  .btn-primary:hover{color:#241a08;filter:brightness(1.04)}
+  .btn-resume{background:rgba(142,163,234,0.1);border-color:rgba(142,163,234,0.35);color:var(--lapis)}
+  .btn-resume:hover{color:#c3cef7;border-color:var(--lapis)}
+  .btn-resume small{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);margin-top:3px}
+
+  /* =====================  PRAY  ===================== */
+  #pray{padding-bottom:12px}
+  .pray-grid{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
+
+  .ring-wrap{flex-shrink:0;display:flex;justify-content:center;align-items:center;padding:6px 0 2px}
+  .ring-wrap svg{width:100%;max-width:230px;height:auto;overflow:visible}
+  .bead{fill:var(--future);transition:fill .5s ease}
+  .bead.filled{fill:var(--lapis-deep)}
+  .bead.filled.big{fill:var(--lapis)}
+  .bead.current{fill:var(--gold)}
+  .cross-part{fill:var(--future);transition:fill .5s ease}
+  .cross-part.filled{fill:var(--lapis)}
+  .cross-part.current{fill:var(--gold)}
+  .medal-ring{fill:none;stroke:var(--future);stroke-width:1.4;transition:stroke .5s}
+  .medal-ring.filled{stroke:var(--lapis)}
+  .medal-ring.current{stroke:var(--gold)}
+  #halo{fill:none;stroke:var(--gold);stroke-width:1.6;opacity:.9}
+  .haloPulse{animation:halo 2.4s ease-in-out infinite}
+  @keyframes halo{0%,100%{opacity:.28;transform:scale(1)}50%{opacity:.85;transform:scale(1.28)}}
+  #halo{transform-box:fill-box;transform-origin:center}
+
+  .panel{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4.5vw,32px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .eyebrow{font-family:var(--ui);font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-deep);flex-shrink:0}
+  .context{font-family:var(--display);font-style:italic;font-size:clamp(19px,4.6vw,24px);color:var(--lapis);margin-top:4px;flex-shrink:0}
+  .ptitle{font-family:var(--display);font-weight:600;font-size:clamp(28px,7vw,40px);line-height:1.06;margin-top:10px;flex-shrink:0}
+  .psub{font-family:var(--ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px;flex-shrink:0}
+  .ptext{font-family:var(--serif);font-size:clamp(19px,4.8vw,25px);line-height:1.5;color:var(--vellum);margin-top:18px;max-width:34em}
+  .ptext.prayer{font-size:clamp(20px,5vw,27px);letter-spacing:.004em}
+  .pmeta{margin-top:auto;padding-top:20px;display:flex;flex-wrap:wrap;gap:6px 18px;flex-shrink:0}
+  .pmeta span{font-family:var(--ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+  .pmeta b{color:var(--lapis);font-weight:500}
+
+  .navbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding-top:12px}
+  .progress{flex:1;height:3px;background:var(--future);border-radius:3px;overflow:hidden;position:relative}
+  .progress i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--lapis),var(--gold));border-radius:3px;transition:width .45s ease}
+  .count{font-family:var(--ui);font-size:11px;letter-spacing:.1em;color:var(--muted);min-width:52px;text-align:center}
+  .nav-btn{width:56px;height:52px;flex-shrink:0;border-radius:13px;border:1px solid var(--line);background:var(--panel);color:var(--vellum);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s,color .2s,transform .1s}
+  .nav-btn:hover{border-color:var(--gold-deep);color:var(--gold)}
+  .nav-btn:active{transform:translateY(1px)}
+  .nav-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .nav-btn:disabled{opacity:.28;cursor:default;pointer-events:none}
+  .nav-next{width:auto;flex:0 0 auto;padding:0 26px;background:linear-gradient(180deg,#f4d488,#e0b354);color:#241a08;border-color:transparent;font-family:var(--ui);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;gap:8px}
+  .nav-next:hover{color:#241a08;filter:brightness(1.05)}
+
+  /* =====================  DONE  ===================== */
+  #done{align-items:center;justify-content:center;text-align:center;gap:0;padding:20px 0 40px}
+  .done-cross{font-family:var(--display);font-size:56px;color:var(--gold);line-height:1}
+  #done h2{font-family:var(--display);font-weight:600;font-size:clamp(34px,8vw,52px);margin-top:18px}
+  #done .dset{font-family:var(--display);font-style:italic;font-size:clamp(20px,5vw,26px);color:var(--lapis);margin-top:6px}
+  #done .dbless{font-family:var(--serif);font-size:clamp(18px,4.6vw,22px);line-height:1.5;color:var(--vellum-soft);margin-top:26px;max-width:24em}
+  .done-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin-top:32px}
+
+  .footer{flex-shrink:0;text-align:center;padding:14px 0 20px;font-family:var(--ui);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2)}
+  .footer a{color:var(--muted-2);text-decoration:none;border-bottom:1px solid transparent}
+  .footer a:hover{color:var(--gold-deep);border-color:var(--gold-deep)}
+
+  @media(min-width:760px){
+    .sets{max-width:520px}
+    .pray-grid{flex-direction:row;align-items:stretch;gap:26px}
+    .ring-wrap{flex:0 0 300px;align-items:flex-start;padding-top:8px}
+    .ring-wrap svg{max-width:300px;position:sticky;top:16px}
+    .panel{flex:1}
+    #pray .navbar{max-width:none}
+    .pray-outer{display:flex;flex-direction:column;flex:1;min-height:0}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+    .haloPulse{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <a class="brand" href="https://augustineiacopelli.github.io/appaday/">App<b>A</b>Day <b>080</b></a>
+    <button class="topbar-act" id="topAct" type="button" style="visibility:hidden">End</button>
+  </div>
+
+  <!-- ==================== HOME ==================== -->
+  <section class="screen on" id="home">
+    <h1 class="wordmark">Rosary<span class="amp">Companion</span></h1>
+    <div class="tagline">bead by bead, through the mysteries</div>
+
+    <div class="today">
+      <span class="wk" id="todayWk">Today</span>
+      <span id="todayLine">Pray the <em>Mysteries</em></span>
+      <span class="note" id="todayNote"></span>
+    </div>
+
+    <div class="sets" id="setGrid"></div>
+
+    <div class="preview">
+      <h4 id="previewHead">The Mysteries</h4>
+      <ol id="previewList"></ol>
+    </div>
+
+    <div class="home-actions">
+      <button class="btn btn-resume" id="resumeBtn" type="button" style="display:none"></button>
+      <button class="btn btn-primary" id="beginBtn" type="button">Begin the Rosary</button>
+    </div>
+  </section>
+
+  <!-- ==================== PRAY ==================== -->
+  <section class="screen" id="pray">
+    <div class="pray-outer">
+      <div class="pray-grid">
+        <div class="ring-wrap"><svg id="ring" viewBox="0 0 280 362" aria-hidden="true"></svg></div>
+        <div class="panel" id="panel">
+          <div class="eyebrow" id="eyebrow"></div>
+          <div class="context" id="context" style="display:none"></div>
+          <div class="ptitle" id="ptitle"></div>
+          <div class="psub" id="psub" style="display:none"></div>
+          <div class="ptext" id="ptext"></div>
+          <div class="pmeta" id="pmeta" style="display:none"></div>
+        </div>
+      </div>
+      <div class="navbar">
+        <button class="nav-btn" id="backBtn" type="button" aria-label="Previous prayer">&#8592;</button>
+        <div class="progress"><i id="progFill"></i></div>
+        <span class="count" id="count">1 / 80</span>
+        <button class="nav-btn nav-next" id="nextBtn" type="button">Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== DONE ==================== -->
+  <section class="screen" id="done">
+    <div class="done-cross">&#10013;</div>
+    <h2>Rosary Complete</h2>
+    <div class="dset" id="doneSet"></div>
+    <p class="dbless">May the divine assistance remain always with us, and may the souls of the faithful departed, through the mercy of God, rest in peace. Amen.</p>
+    <div class="done-actions">
+      <button class="btn btn-primary" id="againBtn" type="button">Pray Again</button>
+      <button class="btn" id="homeBtn" type="button">Return Home</button>
+    </div>
+  </section>
+
+  <div class="footer">
+    Part of <a href="https://augustineiacopelli.github.io/appaday/">AppADay</a> &middot; No. 080
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ============================================================
+//  PRAYER TEXTS  (traditional English)
+// ============================================================
+var PRAYERS = {
+  sign: "In the name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+  creed: "I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.",
+  our_father: "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.",
+  hail_mary: "Hail Mary, full of grace, the Lord is with thee; blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+  glory: "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen.",
+  fatima: "O my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to heaven, especially those in most need of thy mercy. Amen.",
+  salve: "Hail, holy Queen, Mother of mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O holy Mother of God, that we may be made worthy of the promises of Christ. Amen.",
+  closing: "O God, whose only begotten Son, by his life, death, and resurrection, has purchased for us the rewards of eternal life; grant, we beseech thee, that meditating upon these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise, through the same Christ our Lord. Amen."
+};
+
+// ============================================================
+//  MYSTERIES
+// ============================================================
+var SETS = {
+  joyful: { key:"joyful", name:"Joyful", full:"Joyful Mysteries", days:"Mon & Sat", m:[
+    { name:"The Annunciation",            ref:"Luke 1:26-38", fruit:"Humility",              med:"The angel Gabriel greets Mary, and she gives her fiat: let it be done unto me according to thy word." },
+    { name:"The Visitation",              ref:"Luke 1:39-45", fruit:"Love of Neighbor",      med:"Mary hastens to serve Elizabeth, who cries out that she is blessed among women." },
+    { name:"The Nativity",                ref:"Luke 2:6-12",  fruit:"Poverty of Spirit",     med:"Christ is born in poverty at Bethlehem and laid in a manger." },
+    { name:"The Presentation",            ref:"Luke 2:22-32", fruit:"Obedience",             med:"The Child is presented in the Temple, and Simeon blesses God for his salvation." },
+    { name:"The Finding in the Temple",   ref:"Luke 2:46-50", fruit:"Joy in Seeking Christ", med:"After three days Jesus is found among the teachers, about his Father's business." }
+  ]},
+  sorrowful: { key:"sorrowful", name:"Sorrowful", full:"Sorrowful Mysteries", days:"Tue & Fri", m:[
+    { name:"The Agony in the Garden",     ref:"Luke 22:39-44",     fruit:"Sorrow for Sin",  med:"In Gethsemane Jesus prays in anguish, yet yields wholly to the Father's will." },
+    { name:"The Scourging at the Pillar", ref:"John 19:1",         fruit:"Purity",          med:"Christ is bound and cruelly scourged, bearing the weight of our sins." },
+    { name:"The Crowning with Thorns",    ref:"Matthew 27:27-31",  fruit:"Courage",         med:"The soldiers crown the King of Kings with thorns and mock him." },
+    { name:"The Carrying of the Cross",   ref:"John 19:17",        fruit:"Patience",        med:"Jesus takes up his Cross and carries it along the road to Calvary." },
+    { name:"The Crucifixion",             ref:"Luke 23:33-46",     fruit:"Perseverance",    med:"Upon the Cross Christ commends his spirit to the Father and dies for our salvation." }
+  ]},
+  glorious: { key:"glorious", name:"Glorious", full:"Glorious Mysteries", days:"Wed & Sun", m:[
+    { name:"The Resurrection",              ref:"Matthew 28:1-7", fruit:"Faith",         med:"Christ rises from the tomb, victorious over sin and death." },
+    { name:"The Ascension",                 ref:"Acts 1:6-11",    fruit:"Hope",          med:"Jesus ascends into heaven and is seated at the right hand of the Father." },
+    { name:"The Descent of the Holy Spirit",ref:"Acts 2:1-4",     fruit:"Love of God",   med:"The Holy Spirit descends upon Our Lady and the Apostles at Pentecost." },
+    { name:"The Assumption",                ref:"cf. Rev 12:1",   fruit:"A Holy Death",  med:"Mary is taken up, body and soul, into the glory of heaven." },
+    { name:"The Coronation of Mary",        ref:"cf. Rev 12:1",   fruit:"Trust in Mary", med:"Mary is crowned Queen of heaven and earth, our mother and advocate." }
+  ]},
+  luminous: { key:"luminous", name:"Luminous", full:"Luminous Mysteries", days:"Thursday", m:[
+    { name:"The Baptism in the Jordan",       ref:"Matthew 3:16-17", fruit:"Openness to the Spirit", med:"The heavens open and the Father names Jesus his beloved Son." },
+    { name:"The Wedding at Cana",             ref:"John 2:1-11",     fruit:"To Jesus through Mary",  med:"At Mary's word, do whatever he tells you, Jesus works his first sign." },
+    { name:"The Proclamation of the Kingdom", ref:"Mark 1:14-15",    fruit:"Repentance",            med:"Jesus calls all to repent and believe in the good news of the Kingdom." },
+    { name:"The Transfiguration",             ref:"Matthew 17:1-5",  fruit:"Desire for Holiness",   med:"Christ is transfigured in glory before Peter, James, and John." },
+    { name:"The Institution of the Eucharist",ref:"Luke 22:19-20",   fruit:"Adoration",             med:"At the Last Supper Jesus gives his Body and Blood as the bread of life." }
+  ]}
+};
+
+// weekday to set: Sun..Sat
+var WEEKDAY = ["glorious","joyful","sorrowful","glorious","luminous","sorrowful","joyful"];
+
+// ---- liturgical season: the Sunday mysteries vary by season ----
+// Weekdays (Mon-Sat) are fixed; Sunday follows the season:
+//   Advent + Christmas -> Joyful, Lent -> Sorrowful, Easter + Ordinary Time -> Glorious.
+function addDays(dt, n){ return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n); }
+function easterSunday(y){
+  var a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4,
+      f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30,
+      i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451),
+      month=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1;
+  return new Date(y, month-1, day);
+}
+function firstAdventSunday(y){
+  var d24 = new Date(y,11,24);
+  var fourth = new Date(y,11, 24 - d24.getDay());  // Sunday on or before Dec 24 = 4th Sunday of Advent
+  return addDays(fourth, -21);
+}
+function baptismSunday(y){
+  // Epiphany (US) is the Sunday within Jan 2-8; Baptism of the Lord is the Sunday after,
+  // unless Epiphany falls on Jan 7-8, when Baptism moves to Monday and Christmastide ends that Sunday.
+  var jan2 = new Date(y,0,2);
+  var epi = new Date(y,0, 2 + ((7 - jan2.getDay()) % 7));
+  var day = epi.getDate();
+  return (day <= 6) ? new Date(y,0, day + 7) : epi;
+}
+function sundaySeason(date){
+  var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  var y = d.getFullYear();
+  if (d <= baptismSunday(y)) return "christmas";        // early-January Sundays through Baptism of the Lord
+  var e = easterSunday(y), ash = addDays(e, -46);
+  if (d >= ash && d < e) return "lent";                 // the Sundays of Lent, up to Palm Sunday
+  if (d >= firstAdventSunday(y)) return (d >= new Date(y,11,25)) ? "christmas" : "advent";
+  return "ordinary";                                    // Easter season + Ordinary Time -> Glorious
+}
+function seasonSet(season){
+  if (season === "lent") return "sorrowful";
+  if (season === "advent" || season === "christmas") return "joyful";
+  return "glorious";
+}
+function todaysSet(date){
+  return (date.getDay() === 0) ? seasonSet(sundaySeason(date)) : WEEKDAY[date.getDay()];
+}
+var SEASON_NOTE = {
+  advent:    "Sundays of Advent take the Joyful Mysteries.",
+  christmas: "Sundays of Christmastide take the Joyful Mysteries.",
+  lent:      "Sundays of Lent take the Sorrowful Mysteries.",
+  ordinary:  "Ordinary Sundays take the Glorious Mysteries."
+};
+var ORD = ["First","Second","Third","Fourth","Fifth"];
+var STORE_KEY = "appaday-080-rosary";
+
+// ============================================================
+//  BEAD GEOMETRY  (orders 0..60, sentinel done = 61)
+// ============================================================
+var CX = 140, CY = 128, R = 104;
+var O_CRUCIFIX = 0, O_TAIL_OF = 1, O_TAIL_HM = [2,3,4], O_MEDAL = 5, O_LOOP0 = 6;
+var DONE_ALL = 61;
+
+function loopPos(i){
+  // 55 loop beads over 56 slots, slot 0 reserved for medal at bottom
+  var deg = 180 + (i + 1) * (360 / 56);
+  var rad = deg * Math.PI / 180;
+  return { x: CX + R * Math.sin(rad), y: CY - R * Math.cos(rad) };
+}
+function loopOrder(i){ return O_LOOP0 + i; }          // i = 0..54
+function decadeOfIndex(d){ return (d - 1) * 11; }      // loop bead index of the Our Father bead
+
+// ============================================================
+//  BUILD THE LINEAR STEP SEQUENCE FOR A CHOSEN SET
+// ============================================================
+function buildSteps(setKey){
+  var set = SETS[setKey];
+  var steps = [];
+
+  // opening
+  steps.push(mk("Opening", "", "The Sign of the Cross", "", PRAYERS.sign, O_CRUCIFIX, O_CRUCIFIX, false, null));
+  steps.push(mk("Opening", "", "The Apostles' Creed", "", PRAYERS.creed, O_CRUCIFIX, O_CRUCIFIX, false, null));
+  steps.push(mk("Opening", "", "The Our Father", "", PRAYERS.our_father, O_TAIL_OF, O_TAIL_OF, false, null));
+  for (var h = 0; h < 3; h++){
+    steps.push(mk("Opening", "for faith, hope, and charity", "Hail Mary", (h+1) + " of 3", PRAYERS.hail_mary, O_TAIL_HM[h], O_TAIL_HM[h], false, null));
+  }
+  steps.push(mk("Opening", "", "Glory Be", "", PRAYERS.glory, O_MEDAL, O_MEDAL, false, null));
+
+  // five decades
+  for (var d = 1; d <= 5; d++){
+    var idx = decadeOfIndex(d);
+    var ofOrder = loopOrder(idx);
+    var mystery = set.m[d-1];
+    var place = ORD[d-1] + " " + set.name + " Mystery";
+    var meta = { ref: mystery.ref, fruit: mystery.fruit };
+
+    // announce
+    var st = mk(place, "", mystery.name, "Announce the mystery", mystery.med, ofOrder, ofOrder, false, mystery.name);
+    st.meta = meta; st.big = true;
+    steps.push(st);
+    // our father
+    steps.push(mk(place, mystery.name, "The Our Father", "", PRAYERS.our_father, ofOrder, ofOrder, false, mystery.name));
+    // ten hail marys
+    for (var k = 1; k <= 10; k++){
+      steps.push(mk(place, mystery.name, "Hail Mary", k + " of 10", PRAYERS.hail_mary, ofOrder + k, ofOrder + k, false, mystery.name));
+    }
+    // glory + fatima
+    steps.push(mk(place, mystery.name, "Glory Be", "", PRAYERS.glory, ofOrder + 10, ofOrder + 10, false, mystery.name));
+    steps.push(mk(place, mystery.name, "Fatima Prayer", "", PRAYERS.fatima, ofOrder + 10, ofOrder + 10, false, mystery.name));
+  }
+
+  // closing
+  steps.push(mk("Closing Prayers", "", "Hail, Holy Queen", "", PRAYERS.salve, DONE_ALL, O_MEDAL, true, null));
+  steps.push(mk("Closing Prayers", "", "Closing Prayer", "", PRAYERS.closing, DONE_ALL, O_MEDAL, true, null));
+  steps.push(mk("Closing Prayers", "", "The Sign of the Cross", "", PRAYERS.sign, DONE_ALL, O_CRUCIFIX, true, null));
+
+  return steps;
+}
+
+function mk(place, context, title, sub, text, cur, pulse, doneAll, ctxName){
+  return { place:place, context:context, title:title, sub:sub, text:text,
+           cur:cur, pulse:pulse, doneAll:doneAll, meta:null, big:false };
+}
+
+// ============================================================
+//  RENDER THE STATIC BEAD RING (once)
+// ============================================================
+var SVGNS = "http://www.w3.org/2000/svg";
+var beadEls = {};   // order -> element(s) for class toggling
+var haloEl = null;
+
+function svg(tag, attrs){
+  var el = document.createElementNS(SVGNS, tag);
+  for (var a in attrs){ el.setAttribute(a, attrs[a]); }
+  return el;
+}
+
+function drawRing(){
+  var s = document.getElementById("ring");
+  s.innerHTML = "";
+  beadEls = {};
+
+  // loop beads (draw first, behind)
+  var ofIdx = { 0:1, 11:1, 22:1, 33:1, 44:1 };
+  for (var i = 0; i < 55; i++){
+    var p = loopPos(i);
+    var big = ofIdx[i] ? 1 : 0;
+    var c = svg("circle", { cx:p.x.toFixed(2), cy:p.y.toFixed(2), r: big ? 6.2 : 4.4, class: big ? "bead big" : "bead" });
+    s.appendChild(c);
+    beadEls[loopOrder(i)] = c;
+  }
+
+  // medal (double ring)
+  var mOuter = svg("circle", { cx:CX, cy:(CY+R).toFixed(2), r:8.2, class:"bead", "fill-opacity":"0" });
+  var mRing = svg("circle", { cx:CX, cy:(CY+R).toFixed(2), r:8.2, class:"medal-ring" });
+  var mDot  = svg("circle", { cx:CX, cy:(CY+R).toFixed(2), r:3.4, class:"bead big" });
+  s.appendChild(mOuter); s.appendChild(mRing); s.appendChild(mDot);
+  beadEls[O_MEDAL] = [mRing, mDot];
+
+  // tail
+  var tailY = CY + R;
+  var tOf = svg("circle", { cx:CX, cy:(tailY+26).toFixed(2), r:6.2, class:"bead big" });
+  s.appendChild(tOf); beadEls[O_TAIL_OF] = tOf;
+  var hmY = [tailY+46, tailY+65, tailY+84];
+  for (var t = 0; t < 3; t++){
+    var th = svg("circle", { cx:CX, cy:hmY[t].toFixed(2), r:4.4, class:"bead" });
+    s.appendChild(th); beadEls[O_TAIL_HM[t]] = th;
+  }
+
+  // crucifix
+  var cbY = tailY + 108;
+  var vBar = svg("rect", { x:(CX-2).toFixed(2), y:(cbY-13).toFixed(2), width:4, height:28, rx:2, class:"cross-part" });
+  var hBar = svg("rect", { x:(CX-8).toFixed(2), y:(cbY-4).toFixed(2), width:16, height:4, rx:2, class:"cross-part" });
+  s.appendChild(vBar); s.appendChild(hBar);
+  beadEls[O_CRUCIFIX] = [vBar, hBar];
+
+  // halo (on top)
+  haloEl = svg("circle", { id:"halo", r:9, cx:CX, cy:CY });
+  s.appendChild(haloEl);
+}
+
+function beadXY(order){
+  if (order === O_CRUCIFIX) return { x:CX, y:CY + R + 108 };
+  if (order === O_MEDAL) return { x:CX, y:CY + R };
+  if (order === O_TAIL_OF) return { x:CX, y:CY + R + 26 };
+  if (order === O_TAIL_HM[0]) return { x:CX, y:CY + R + 46 };
+  if (order === O_TAIL_HM[1]) return { x:CX, y:CY + R + 65 };
+  if (order === O_TAIL_HM[2]) return { x:CX, y:CY + R + 84 };
+  if (order >= O_LOOP0) return loopPos(order - O_LOOP0);
+  return { x:CX, y:CY };
+}
+
+function setState(el, filled, current){
+  if (!el) return;
+  var list = el.length ? el : [el];
+  for (var j = 0; j < list.length; j++){
+    var e = list[j];
+    e.classList.remove("filled", "current");
+    if (current) e.classList.add("current");
+    else if (filled) e.classList.add("filled");
+  }
+}
+
+function paintRing(step){
+  for (var order = 0; order <= 60; order++){
+    var el = beadEls[order];
+    if (!el) continue;
+    var filled = step.doneAll || order < step.cur;
+    var current = !step.doneAll && order === step.cur;
+    setState(el, filled, current);
+  }
+  var pos = beadXY(step.pulse);
+  haloEl.setAttribute("cx", pos.x.toFixed(2));
+  haloEl.setAttribute("cy", pos.y.toFixed(2));
+  haloEl.classList.add("haloPulse");
+}
+
+// ============================================================
+//  APP STATE + FLOW
+// ============================================================
+var state = { setKey:null, steps:[], i:0 };
+
+function screen(id){
+  var all = document.querySelectorAll(".screen");
+  for (var n = 0; n < all.length; n++){ all[n].classList.remove("on"); }
+  document.getElementById(id).classList.add("on");
+  var act = document.getElementById("topAct");
+  act.style.visibility = (id === "pray") ? "visible" : "hidden";
+}
+
+function startSet(setKey, resumeAt){
+  state.setKey = setKey;
+  state.steps = buildSteps(setKey);
+  state.i = resumeAt || 0;
+  drawRing();
+  screen("pray");
+  render();
+}
+
+function render(){
+  var step = state.steps[state.i];
+  var total = state.steps.length;
+
+  document.getElementById("eyebrow").textContent = step.place;
+
+  var ctx = document.getElementById("context");
+  if (step.context){ ctx.style.display = "block"; ctx.textContent = step.context; }
+  else { ctx.style.display = "none"; }
+
+  document.getElementById("ptitle").textContent = step.title;
+
+  var sub = document.getElementById("psub");
+  if (step.sub){ sub.style.display = "block"; sub.textContent = step.sub; }
+  else { sub.style.display = "none"; }
+
+  var txt = document.getElementById("ptext");
+  txt.textContent = step.text;
+  txt.className = step.big ? "ptext" : "ptext prayer";
+
+  var meta = document.getElementById("pmeta");
+  if (step.meta){
+    meta.style.display = "flex";
+    meta.innerHTML = "<span>Scripture <b>" + step.meta.ref + "</b></span>" +
+                     "<span>Fruit of the Mystery <b>" + step.meta.fruit + "</b></span>";
+  } else { meta.style.display = "none"; }
+
+  paintRing(step);
+  document.getElementById("panel").scrollTop = 0;
+
+  document.getElementById("progFill").style.width = ((state.i + 1) / total * 100) + "%";
+  document.getElementById("count").textContent = (state.i + 1) + " / " + total;
+  document.getElementById("backBtn").disabled = state.i === 0;
+  document.getElementById("nextBtn").textContent = (state.i === total - 1) ? "Amen" : "Continue";
+
+  save();
+}
+
+function next(){
+  if (state.i >= state.steps.length - 1){ finish(); return; }
+  state.i++;
+  render();
+}
+function back(){
+  if (state.i > 0){ state.i--; render(); }
+}
+function finish(){
+  clearSave();
+  document.getElementById("doneSet").textContent = "The " + SETS[state.setKey].full;
+  screen("done");
+}
+
+// ============================================================
+//  PERSISTENCE (resumable progress)
+// ============================================================
+function todayISO(){
+  var d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+}
+function save(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ set:state.setKey, i:state.i, date:todayISO() }));
+  } catch(e){}
+}
+function clearSave(){
+  try { localStorage.removeItem(STORE_KEY); } catch(e){}
+}
+function loadSave(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return null;
+    var s = JSON.parse(raw);
+    if (!s || !SETS[s.set] || s.i <= 0) return null;
+    return s;
+  } catch(e){ return null; }
+}
+
+// ============================================================
+//  HOME SCREEN
+// ============================================================
+var selectedSet = null;
+
+function weekdayName(){
+  return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+}
+
+function buildHome(){
+  var now = new Date();
+  var todaysKey = todaysSet(now);
+  selectedSet = todaysKey;
+
+  document.getElementById("todayWk").textContent = "Today, " + weekdayName();
+  document.getElementById("todayLine").innerHTML = "The <em>" + SETS[todaysKey].full + "</em>";
+  document.getElementById("todayNote").textContent = (now.getDay() === 0) ? SEASON_NOTE[sundaySeason(now)] : "";
+
+  var grid = document.getElementById("setGrid");
+  grid.innerHTML = "";
+  var order = ["joyful","luminous","sorrowful","glorious"];
+  for (var q = 0; q < order.length; q++){
+    (function(key){
+      var set = SETS[key];
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "set-card";
+      card.setAttribute("aria-pressed", key === selectedSet ? "true" : "false");
+      var badge = (key === todaysKey) ? '<span class="badge">Today</span>' : '';
+      card.innerHTML = badge + '<div class="sname">' + set.name + '</div><div class="sdays">' + set.days + '</div>';
+      card.addEventListener("click", function(){ selectSet(key); });
+      grid.appendChild(card);
+    })(order[q]);
+  }
+  paintPreview();
+  refreshResume();
+}
+
+function selectSet(key){
+  selectedSet = key;
+  var cards = document.querySelectorAll(".set-card");
+  var order = ["joyful","luminous","sorrowful","glorious"];
+  for (var n = 0; n < cards.length; n++){
+    cards[n].setAttribute("aria-pressed", order[n] === key ? "true" : "false");
+  }
+  paintPreview();
+}
+
+function paintPreview(){
+  var set = SETS[selectedSet];
+  document.getElementById("previewHead").textContent = "The " + set.full;
+  var ol = document.getElementById("previewList");
+  ol.innerHTML = "";
+  for (var m = 0; m < set.m.length; m++){
+    var li = document.createElement("li");
+    li.textContent = set.m[m].name;
+    ol.appendChild(li);
+  }
+}
+
+function refreshResume(){
+  var saved = loadSave();
+  var btn = document.getElementById("resumeBtn");
+  if (!saved){ btn.style.display = "none"; return; }
+  var steps = buildSteps(saved.set);
+  var place = steps[saved.i] ? steps[saved.i].place : "";
+  btn.style.display = "block";
+  btn.innerHTML = "Resume the " + SETS[saved.set].full + "<small>" + place + "</small>";
+  btn.onclick = function(){ startSet(saved.set, saved.i); };
+}
+
+// ============================================================
+//  WIRING
+// ============================================================
+document.getElementById("beginBtn").addEventListener("click", function(){ startSet(selectedSet, 0); });
+document.getElementById("nextBtn").addEventListener("click", next);
+document.getElementById("backBtn").addEventListener("click", back);
+document.getElementById("topAct").addEventListener("click", function(){ screen("home"); refreshResume(); });
+document.getElementById("againBtn").addEventListener("click", function(){ startSet(state.setKey, 0); });
+document.getElementById("homeBtn").addEventListener("click", function(){ screen("home"); buildHome(); });
+
+document.addEventListener("keydown", function(e){
+  if (!document.getElementById("pray").classList.contains("on")) return;
+  if (e.key === "ArrowRight" || e.key === " "){ e.preventDefault(); next(); }
+  else if (e.key === "ArrowLeft"){ e.preventDefault(); back(); }
+  else if (e.key === "Escape"){ screen("home"); refreshResume(); }
+});
+
+// swipe on the ring + panel
+(function(){
+  var x0 = null, y0 = null;
+  var zone = document.getElementById("pray");
+  zone.addEventListener("touchstart", function(e){ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+  zone.addEventListener("touchend", function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    var dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6){
+      if (dx < 0) next(); else back();
+    }
+    x0 = null; y0 = null;
+  }, {passive:true});
+})();
+
+buildHome();
+</script>
+</body>
+</html>
