@@ -200,7 +200,7 @@
   <section class="screen" id="pray">
     <div class="pray-outer">
       <div class="pray-grid">
-        <div class="ring-wrap"><svg id="ring" viewBox="0 0 280 362" aria-hidden="true"></svg></div>
+        <div class="ring-wrap"><svg id="ring" viewBox="0 0 280 388" aria-hidden="true"></svg></div>
         <div class="panel" id="panel">
           <div class="eyebrow" id="eyebrow"></div>
           <div class="context" id="context" style="display:none"></div>
@@ -344,17 +344,34 @@ var STORE_KEY = "appaday-080-rosary";
 //  BEAD GEOMETRY  (orders 0..60, sentinel done = 61)
 // ============================================================
 var CX = 140, CY = 128, R = 104;
-var O_CRUCIFIX = 0, O_TAIL_OF = 1, O_TAIL_HM = [2,3,4], O_MEDAL = 5, O_LOOP0 = 6;
+var O_CRUCIFIX = 0, O_TAIL_OF = 1, O_TAIL_HM = [2,3,4], O_DEC1_OF = 5, O_MEDAL = 6, O_LOOP0 = 7;
 var DONE_ALL = 61;
 
+// The first decade's Our Father is the tail bead above the three Hail Marys, so the loop
+// carries decade 1's ten Hail Marys, then decades 2-5 each as one Our Father plus ten Hail
+// Marys. A small gap sets each Our Father off its Hail Marys; a wider gap divides decades.
+var LOOP_ANGLES = (function(){
+  var GAP_HM = 1.0, GAP_OF_HM = 1.7, GAP_DEC = 2.3;
+  var gaps = [];
+  gaps.push(GAP_DEC);                                 // decade 1, first Hail Mary (off the medal)
+  for (var k = 1; k < 10; k++) gaps.push(GAP_HM);     // decade 1, remaining Hail Marys
+  for (var d = 2; d <= 5; d++){
+    gaps.push(GAP_DEC);                               // decade's Our Father bead
+    gaps.push(GAP_OF_HM);                             // first Hail Mary
+    for (var j = 1; j < 10; j++) gaps.push(GAP_HM);
+  }
+  var closing = GAP_DEC, total = closing;
+  for (var g = 0; g < gaps.length; g++) total += gaps[g];
+  var start = 193, sweep = 334, run = 0, a = [];
+  for (var i = 0; i < gaps.length; i++){ run += gaps[i]; a.push(start + run / total * sweep); }
+  return a;   // 54 angles; decade Our Father beads at indices 10, 21, 32, 43
+})();
 function loopPos(i){
-  // 55 loop beads over 56 slots, slot 0 reserved for medal at bottom
-  var deg = 180 + (i + 1) * (360 / 56);
-  var rad = deg * Math.PI / 180;
+  var rad = LOOP_ANGLES[i] * Math.PI / 180;
   return { x: CX + R * Math.sin(rad), y: CY - R * Math.cos(rad) };
 }
-function loopOrder(i){ return O_LOOP0 + i; }          // i = 0..54
-function decadeOfIndex(d){ return (d - 1) * 11; }      // loop bead index of the Our Father bead
+function loopOrder(i){ return O_LOOP0 + i; }          // i = 0..53
+function loopOfIndex(d){ return 10 + (d - 2) * 11; }  // loop index of the Our Father bead, d = 2..5
 
 // ============================================================
 //  BUILD THE LINEAR STEP SEQUENCE FOR A CHOSEN SET
@@ -370,15 +387,19 @@ function buildSteps(setKey){
   for (var h = 0; h < 3; h++){
     steps.push(mk("Opening", "for faith, hope, and charity", "Hail Mary", (h+1) + " of 3", PRAYERS.hail_mary, O_TAIL_HM[h], O_TAIL_HM[h], false, null));
   }
-  steps.push(mk("Opening", "", "Glory Be", "", PRAYERS.glory, O_MEDAL, O_MEDAL, false, null));
+  steps.push(mk("Opening", "", "Glory Be", "", PRAYERS.glory, O_TAIL_HM[2], O_TAIL_HM[2], false, null));
 
-  // five decades
+  // five decades. Decade 1's Our Father is the tail bead above the three Hail Marys, and its
+  // ten Hail Marys begin the loop. Decades 2-5 sit wholly on the loop.
   for (var d = 1; d <= 5; d++){
-    var idx = decadeOfIndex(d);
-    var ofOrder = loopOrder(idx);
     var mystery = set.m[d-1];
     var place = ORD[d-1] + " " + set.name + " Mystery";
     var meta = { ref: mystery.ref, fruit: mystery.fruit };
+
+    var ofOrder, hm0;
+    if (d === 1){ ofOrder = O_DEC1_OF; hm0 = O_LOOP0; }
+    else { ofOrder = loopOrder(loopOfIndex(d)); hm0 = ofOrder + 1; }
+    var lastHm = hm0 + 9;
 
     // announce
     var st = mk(place, "", mystery.name, "Announce the mystery", mystery.med, ofOrder, ofOrder, false, mystery.name);
@@ -387,12 +408,12 @@ function buildSteps(setKey){
     // our father
     steps.push(mk(place, mystery.name, "The Our Father", "", PRAYERS.our_father, ofOrder, ofOrder, false, mystery.name));
     // ten hail marys
-    for (var k = 1; k <= 10; k++){
-      steps.push(mk(place, mystery.name, "Hail Mary", k + " of 10", PRAYERS.hail_mary, ofOrder + k, ofOrder + k, false, mystery.name));
+    for (var k = 0; k < 10; k++){
+      steps.push(mk(place, mystery.name, "Hail Mary", (k+1) + " of 10", PRAYERS.hail_mary, hm0 + k, hm0 + k, false, mystery.name));
     }
-    // glory + fatima
-    steps.push(mk(place, mystery.name, "Glory Be", "", PRAYERS.glory, ofOrder + 10, ofOrder + 10, false, mystery.name));
-    steps.push(mk(place, mystery.name, "Fatima Prayer", "", PRAYERS.fatima, ofOrder + 10, ofOrder + 10, false, mystery.name));
+    // glory + fatima (on the last Hail Mary bead of the decade)
+    steps.push(mk(place, mystery.name, "Glory Be", "", PRAYERS.glory, lastHm, lastHm, false, mystery.name));
+    steps.push(mk(place, mystery.name, "Fatima Prayer", "", PRAYERS.fatima, lastHm, lastHm, false, mystery.name));
   }
 
   // closing
@@ -426,9 +447,10 @@ function drawRing(){
   s.innerHTML = "";
   beadEls = {};
 
-  // loop beads (draw first, behind)
-  var ofIdx = { 0:1, 11:1, 22:1, 33:1, 44:1 };
-  for (var i = 0; i < 55; i++){
+  // loop beads (draw first, behind). 54 beads: decade 1 is ten Hail Marys, then decades 2-5
+  // are one Our Father plus ten Hail Marys. Our Father beads sit at indices 10, 21, 32, 43.
+  var ofIdx = { 10:1, 21:1, 32:1, 43:1 };
+  for (var i = 0; i < 54; i++){
     var p = loopPos(i);
     var big = ofIdx[i] ? 1 : 0;
     var c = svg("circle", { cx:p.x.toFixed(2), cy:p.y.toFixed(2), r: big ? 6.2 : 4.4, class: big ? "bead big" : "bead" });
@@ -443,18 +465,21 @@ function drawRing(){
   s.appendChild(mOuter); s.appendChild(mRing); s.appendChild(mDot);
   beadEls[O_MEDAL] = [mRing, mDot];
 
-  // tail
+  // tail. Climbing from the crucifix: the opening Our Father, the three Hail Marys, then the
+  // first decade's Our Father just below the medal. Wider gaps set the Our Father beads apart.
   var tailY = CY + R;
-  var tOf = svg("circle", { cx:CX, cy:(tailY+26).toFixed(2), r:6.2, class:"bead big" });
-  s.appendChild(tOf); beadEls[O_TAIL_OF] = tOf;
-  var hmY = [tailY+46, tailY+65, tailY+84];
+  var tHm = [tailY+80, tailY+63, tailY+46];   // HM1 nearest the opening Our Father, HM3 nearest the medal
   for (var t = 0; t < 3; t++){
-    var th = svg("circle", { cx:CX, cy:hmY[t].toFixed(2), r:4.4, class:"bead" });
+    var th = svg("circle", { cx:CX, cy:tHm[t].toFixed(2), r:4.4, class:"bead" });
     s.appendChild(th); beadEls[O_TAIL_HM[t]] = th;
   }
+  var tOf = svg("circle", { cx:CX, cy:(tailY+104).toFixed(2), r:6.2, class:"bead big" });
+  s.appendChild(tOf); beadEls[O_TAIL_OF] = tOf;
+  var tDec1 = svg("circle", { cx:CX, cy:(tailY+22).toFixed(2), r:6.2, class:"bead big" });
+  s.appendChild(tDec1); beadEls[O_DEC1_OF] = tDec1;
 
   // crucifix
-  var cbY = tailY + 108;
+  var cbY = tailY + 128;
   var vBar = svg("rect", { x:(CX-2).toFixed(2), y:(cbY-13).toFixed(2), width:4, height:28, rx:2, class:"cross-part" });
   var hBar = svg("rect", { x:(CX-8).toFixed(2), y:(cbY-4).toFixed(2), width:16, height:4, rx:2, class:"cross-part" });
   s.appendChild(vBar); s.appendChild(hBar);
@@ -466,12 +491,13 @@ function drawRing(){
 }
 
 function beadXY(order){
-  if (order === O_CRUCIFIX) return { x:CX, y:CY + R + 108 };
+  if (order === O_CRUCIFIX) return { x:CX, y:CY + R + 128 };
   if (order === O_MEDAL) return { x:CX, y:CY + R };
-  if (order === O_TAIL_OF) return { x:CX, y:CY + R + 26 };
-  if (order === O_TAIL_HM[0]) return { x:CX, y:CY + R + 46 };
-  if (order === O_TAIL_HM[1]) return { x:CX, y:CY + R + 65 };
-  if (order === O_TAIL_HM[2]) return { x:CX, y:CY + R + 84 };
+  if (order === O_TAIL_OF) return { x:CX, y:CY + R + 104 };
+  if (order === O_TAIL_HM[0]) return { x:CX, y:CY + R + 80 };
+  if (order === O_TAIL_HM[1]) return { x:CX, y:CY + R + 63 };
+  if (order === O_TAIL_HM[2]) return { x:CX, y:CY + R + 46 };
+  if (order === O_DEC1_OF) return { x:CX, y:CY + R + 22 };
   if (order >= O_LOOP0) return loopPos(order - O_LOOP0);
   return { x:CX, y:CY };
 }
