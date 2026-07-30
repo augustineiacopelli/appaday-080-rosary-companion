@@ -20,12 +20,18 @@ On opening, the app selects the day's mysteries for you and lets you choose a di
 
 The seasonal boundaries are computed rather than guessed. Easter is found with the Computus algorithm, which in turn fixes Ash Wednesday and the whole of Lent, while the start of Advent and the Baptism of the Lord mark the edges of the Christmas season.
 
+## Languages and reading aloud
+
+The whole devotion is available in four languages: English, Latin, Spanish, and Italian. Choosing a language at the bottom of the home screen translates everything, the prayers, the mystery names, their scripture and fruit, the meditations, and the interface itself, into the traditional forms of that tongue. Your choice is remembered for next time, and a resumed rosary comes back in the language you were praying it in.
+
+When the device offers a matching voice, a read-aloud toggle appears and a small speaker button sits in the corner of the prayer screen, speaking each prayer as you arrive on it. Speech uses the voices already built into the device, so it is offered only where one exists. English, Spanish, and Italian are supported this way; Latin is presented as text only, since devices do not carry a Latin voice. On a phone, reading aloud is most reliable in the browser itself. Some devices restrict speech when the app is launched from a home-screen icon, and in that case the toggle steps aside quietly and the rest of the app is unaffected.
+
 ## Using it
 
 Tap Continue, press the right arrow or spacebar, or swipe forward to move to the next prayer. Go back the same way with the left arrow or a swipe. The filling bead ring shows your place at a glance, with the current bead lit in gold and the beads already prayed settled into blue. If you step away, your progress is saved, and the home screen offers to resume where you left off.
 
 ## Notes
 
-A single self-contained file of vanilla HTML, CSS, and JavaScript, with no build step and no dependencies beyond Google Fonts. There is no account, no network call for the prayers, and no tracking. The only thing stored is your place in the current rosary, kept in the browser's local storage so you can resume. The prayer texts are the traditional English forms.
+A single self-contained file of vanilla HTML, CSS, and JavaScript, with no build step and no dependencies beyond Google Fonts. There is no account, no network call for the prayers, and no tracking. What is stored is your place in the current rosary and your language and voice preferences, kept in the browser's local storage. Reading aloud, when available, uses the device's own built-in speech and sends nothing anywhere. The prayer texts are the traditional forms in each of the four languages.
 
 Part of AppADay by Augustine Iacopelli. Ship something every day. It compounds.
