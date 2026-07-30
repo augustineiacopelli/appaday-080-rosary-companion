@@ -48,6 +48,25 @@
   .brand:hover{color:var(--muted)}
   .topbar-act{font-family:var(--ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);background:none;border:0;cursor:pointer;padding:8px;border-radius:8px}
   .topbar-act:hover{color:var(--gold)}
+  .topbar-right{display:flex;align-items:center;gap:4px}
+  .icon-btn{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;line-height:0;transition:color .2s,background .2s}
+  .icon-btn:hover{color:var(--gold);background:var(--panel)}
+  .icon-btn.on{color:var(--gold)}
+  .icon-btn .wave{opacity:0;transition:opacity .2s}
+  .icon-btn.on .wave{opacity:1}
+  .icon-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .prefs{width:100%;max-width:440px;margin:26px auto 0;display:flex;flex-direction:column;gap:13px;align-items:center;border-top:1px solid var(--line);padding-top:20px}
+  .lang-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .lang-chip{font-family:var(--ui);font-size:12px;letter-spacing:.08em;padding:8px 15px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+  .lang-chip:hover{color:var(--vellum);border-color:var(--gold-deep)}
+  .lang-chip[aria-pressed="true"]{background:rgba(240,201,107,0.12);border-color:var(--gold);color:var(--gold)}
+  .lang-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .voice-toggle{font-family:var(--ui);font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:9px 17px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:color .2s,border-color .2s;display:inline-flex;align-items:center;gap:9px}
+  .voice-toggle::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted-2);transition:background .2s,box-shadow .2s}
+  .voice-toggle.on{color:var(--gold);border-color:var(--gold-deep)}
+  .voice-toggle.on::before{background:var(--gold);box-shadow:0 0 9px var(--gold)}
+  .voice-toggle:disabled{opacity:.45;cursor:default}
+  .voice-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
   /* ---- screens ---- */
   .screen{flex:1;display:none;flex-direction:column;animation:rise .5s ease both}
@@ -169,13 +188,16 @@
 <div class="shell">
   <div class="topbar">
     <a class="brand" href="https://augustineiacopelli.github.io/appaday/">App<b>A</b>Day <b>080</b></a>
-    <button class="topbar-act" id="topAct" type="button" style="visibility:hidden">End</button>
+    <div class="topbar-right">
+      <button class="icon-btn" id="voiceBtn" type="button" aria-label="Read aloud" aria-pressed="false" style="display:none"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z"/><path class="wave" d="M15.5 8.8a4.5 4.5 0 0 1 0 6.4"/><path class="wave" d="M17.8 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>
+      <button class="topbar-act" id="topAct" type="button" style="visibility:hidden">End</button>
+    </div>
   </div>
 
   <!-- ==================== HOME ==================== -->
   <section class="screen on" id="home">
     <h1 class="wordmark">Rosary<span class="amp">Companion</span></h1>
-    <div class="tagline">bead by bead, through the mysteries</div>
+    <div class="tagline" id="tagline">bead by bead, through the mysteries</div>
 
     <div class="today">
       <span class="wk" id="todayWk">Today</span>
@@ -193,6 +215,11 @@
     <div class="home-actions">
       <button class="btn btn-resume" id="resumeBtn" type="button" style="display:none"></button>
       <button class="btn btn-primary" id="beginBtn" type="button">Begin the Rosary</button>
+    </div>
+
+    <div class="prefs">
+      <div class="lang-row" id="langRow" role="group" aria-label="Language"></div>
+      <button class="voice-toggle" id="voiceToggle" type="button" aria-pressed="false" style="display:none"></button>
     </div>
   </section>
 
@@ -222,9 +249,9 @@
   <!-- ==================== DONE ==================== -->
   <section class="screen" id="done">
     <div class="done-cross">&#10013;</div>
-    <h2>Rosary Complete</h2>
+    <h2 id="doneTitle">Rosary Complete</h2>
     <div class="dset" id="doneSet"></div>
-    <p class="dbless">May the divine assistance remain always with us, and may the souls of the faithful departed, through the mercy of God, rest in peace. Amen.</p>
+    <p class="dbless" id="doneBless">May the divine assistance remain always with us, and may the souls of the faithful departed, through the mercy of God, rest in peace. Amen.</p>
     <div class="done-actions">
       <button class="btn btn-primary" id="againBtn" type="button">Pray Again</button>
       <button class="btn" id="homeBtn" type="button">Return Home</button>
@@ -240,52 +267,10 @@
 "use strict";
 
 // ============================================================
-//  PRAYER TEXTS  (traditional English)
+//  LANGUAGES + LOCALIZED TEXT  (en, la, es, it)
 // ============================================================
-var PRAYERS = {
-  sign: "In the name of the Father, and of the Son, and of the Holy Spirit. Amen.",
-  creed: "I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.",
-  our_father: "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.",
-  hail_mary: "Hail Mary, full of grace, the Lord is with thee; blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
-  glory: "Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen.",
-  fatima: "O my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to heaven, especially those in most need of thy mercy. Amen.",
-  salve: "Hail, holy Queen, Mother of mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O holy Mother of God, that we may be made worthy of the promises of Christ. Amen.",
-  closing: "O God, whose only begotten Son, by his life, death, and resurrection, has purchased for us the rewards of eternal life; grant, we beseech thee, that meditating upon these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise, through the same Christ our Lord. Amen."
-};
-
-// ============================================================
-//  MYSTERIES
-// ============================================================
-var SETS = {
-  joyful: { key:"joyful", name:"Joyful", full:"Joyful Mysteries", days:"Mon & Sat", m:[
-    { name:"The Annunciation",            ref:"Luke 1:26-38", fruit:"Humility",              med:"The angel Gabriel greets Mary, and she gives her fiat: let it be done unto me according to thy word." },
-    { name:"The Visitation",              ref:"Luke 1:39-45", fruit:"Love of Neighbor",      med:"Mary hastens to serve Elizabeth, who cries out that she is blessed among women." },
-    { name:"The Nativity",                ref:"Luke 2:6-12",  fruit:"Poverty of Spirit",     med:"Christ is born in poverty at Bethlehem and laid in a manger." },
-    { name:"The Presentation",            ref:"Luke 2:22-32", fruit:"Obedience",             med:"The Child is presented in the Temple, and Simeon blesses God for his salvation." },
-    { name:"The Finding in the Temple",   ref:"Luke 2:46-50", fruit:"Joy in Seeking Christ", med:"After three days Jesus is found among the teachers, about his Father's business." }
-  ]},
-  sorrowful: { key:"sorrowful", name:"Sorrowful", full:"Sorrowful Mysteries", days:"Tue & Fri", m:[
-    { name:"The Agony in the Garden",     ref:"Luke 22:39-44",     fruit:"Sorrow for Sin",  med:"In Gethsemane Jesus prays in anguish, yet yields wholly to the Father's will." },
-    { name:"The Scourging at the Pillar", ref:"John 19:1",         fruit:"Purity",          med:"Christ is bound and cruelly scourged, bearing the weight of our sins." },
-    { name:"The Crowning with Thorns",    ref:"Matthew 27:27-31",  fruit:"Courage",         med:"The soldiers crown the King of Kings with thorns and mock him." },
-    { name:"The Carrying of the Cross",   ref:"John 19:17",        fruit:"Patience",        med:"Jesus takes up his Cross and carries it along the road to Calvary." },
-    { name:"The Crucifixion",             ref:"Luke 23:33-46",     fruit:"Perseverance",    med:"Upon the Cross Christ commends his spirit to the Father and dies for our salvation." }
-  ]},
-  glorious: { key:"glorious", name:"Glorious", full:"Glorious Mysteries", days:"Wed & Sun", m:[
-    { name:"The Resurrection",              ref:"Matthew 28:1-7", fruit:"Faith",         med:"Christ rises from the tomb, victorious over sin and death." },
-    { name:"The Ascension",                 ref:"Acts 1:6-11",    fruit:"Hope",          med:"Jesus ascends into heaven and is seated at the right hand of the Father." },
-    { name:"The Descent of the Holy Spirit",ref:"Acts 2:1-4",     fruit:"Love of God",   med:"The Holy Spirit descends upon Our Lady and the Apostles at Pentecost." },
-    { name:"The Assumption",                ref:"cf. Rev 12:1",   fruit:"A Holy Death",  med:"Mary is taken up, body and soul, into the glory of heaven." },
-    { name:"The Coronation of Mary",        ref:"cf. Rev 12:1",   fruit:"Trust in Mary", med:"Mary is crowned Queen of heaven and earth, our mother and advocate." }
-  ]},
-  luminous: { key:"luminous", name:"Luminous", full:"Luminous Mysteries", days:"Thursday", m:[
-    { name:"The Baptism in the Jordan",       ref:"Matthew 3:16-17", fruit:"Openness to the Spirit", med:"The heavens open and the Father names Jesus his beloved Son." },
-    { name:"The Wedding at Cana",             ref:"John 2:1-11",     fruit:"To Jesus through Mary",  med:"At Mary's word, do whatever he tells you, Jesus works his first sign." },
-    { name:"The Proclamation of the Kingdom", ref:"Mark 1:14-15",    fruit:"Repentance",            med:"Jesus calls all to repent and believe in the good news of the Kingdom." },
-    { name:"The Transfiguration",             ref:"Matthew 17:1-5",  fruit:"Desire for Holiness",   med:"Christ is transfigured in glory before Peter, James, and John." },
-    { name:"The Institution of the Eucharist",ref:"Luke 22:19-20",   fruit:"Adoration",             med:"At the Last Supper Jesus gives his Body and Blood as the bread of life." }
-  ]}
-};
+var LANGS = ["en", "la", "es", "it"];
+var I18N = {"en":{"label":"English","bcp":"en-US","voice":true,"ui":{"tagline":"bead by bead, through the mysteries","todayWord":"Today","todayBadge":"Today","begin":"Begin the Rosary","resumeWord":"Resume","opening":"Opening","closing":"Closing Prayers","virtues":"for faith, hope, and charity","announce":"Announce the mystery","ofWord":"of","mysteryWord":"Mystery","mysteryFmt":"{ord} {adj} {myst}","scripture":"Scripture","fruit":"Fruit of the Mystery","cont":"Continue","amen":"Amen","endWord":"End","backAria":"Previous prayer","complete":"Rosary Complete","blessing":"May the divine assistance remain always with us, and may the souls of the faithful departed, through the mercy of God, rest in peace. Amen.","prayAgain":"Pray Again","returnHome":"Return Home","the":"The ","voiceOn":"Voice on","voiceOff":"Voice off","voiceNone":"Voice unavailable","readAloud":"Read aloud"},"weekdays":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"ord":["First","Second","Third","Fourth","Fifth"],"seasonNote":{"advent":"Sundays of Advent take the Joyful Mysteries.","christmas":"Sundays of Christmastide take the Joyful Mysteries.","lent":"Sundays of Lent take the Sorrowful Mysteries.","ordinary":"Ordinary Sundays take the Glorious Mysteries."},"prayers":{"sign":"In the name of the Father, and of the Son, and of the Holy Spirit. Amen.","creed":"I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.","our_father":"Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.","hail_mary":"Hail Mary, full of grace, the Lord is with thee; blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.","glory":"Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen.","fatima":"O my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to heaven, especially those in most need of thy mercy. Amen.","salve":"Hail, holy Queen, Mother of mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O holy Mother of God, that we may be made worthy of the promises of Christ. Amen.","closing":"O God, whose only begotten Son, by his life, death, and resurrection, has purchased for us the rewards of eternal life; grant, we beseech thee, that meditating upon these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise, through the same Christ our Lord. Amen."},"titles":{"sign":"The Sign of the Cross","creed":"The Apostles' Creed","our_father":"The Our Father","hail_mary":"Hail Mary","glory":"Glory Be","fatima":"Fatima Prayer","salve":"Hail, Holy Queen","closing":"Closing Prayer"},"sets":{"joyful":{"name":"Joyful","full":"Joyful Mysteries","days":"Mon & Sat","adj":"Joyful","m":[{"name":"The Annunciation","ref":"Luke 1:26-38","fruit":"Humility","med":"The angel Gabriel greets Mary, and she gives her fiat: let it be done unto me according to thy word."},{"name":"The Visitation","ref":"Luke 1:39-45","fruit":"Love of Neighbor","med":"Mary hastens to serve Elizabeth, who cries out that she is blessed among women."},{"name":"The Nativity","ref":"Luke 2:6-12","fruit":"Poverty of Spirit","med":"Christ is born in poverty at Bethlehem and laid in a manger."},{"name":"The Presentation","ref":"Luke 2:22-32","fruit":"Obedience","med":"The Child is presented in the Temple, and Simeon blesses God for his salvation."},{"name":"The Finding in the Temple","ref":"Luke 2:46-50","fruit":"Joy in Seeking Christ","med":"After three days Jesus is found among the teachers, about his Father's business."}]},"sorrowful":{"name":"Sorrowful","full":"Sorrowful Mysteries","days":"Tue & Fri","adj":"Sorrowful","m":[{"name":"The Agony in the Garden","ref":"Luke 22:39-44","fruit":"Sorrow for Sin","med":"In Gethsemane Jesus prays in anguish, yet yields wholly to the Father's will."},{"name":"The Scourging at the Pillar","ref":"John 19:1","fruit":"Purity","med":"Christ is bound and cruelly scourged, bearing the weight of our sins."},{"name":"The Crowning with Thorns","ref":"Matthew 27:27-31","fruit":"Courage","med":"The soldiers crown the King of Kings with thorns and mock him."},{"name":"The Carrying of the Cross","ref":"John 19:17","fruit":"Patience","med":"Jesus takes up his Cross and carries it along the road to Calvary."},{"name":"The Crucifixion","ref":"Luke 23:33-46","fruit":"Perseverance","med":"Upon the Cross Christ commends his spirit to the Father and dies for our salvation."}]},"glorious":{"name":"Glorious","full":"Glorious Mysteries","days":"Wed & Sun","adj":"Glorious","m":[{"name":"The Resurrection","ref":"Matthew 28:1-7","fruit":"Faith","med":"Christ rises from the tomb, victorious over sin and death."},{"name":"The Ascension","ref":"Acts 1:6-11","fruit":"Hope","med":"Jesus ascends into heaven and is seated at the right hand of the Father."},{"name":"The Descent of the Holy Spirit","ref":"Acts 2:1-4","fruit":"Love of God","med":"The Holy Spirit descends upon Our Lady and the Apostles at Pentecost."},{"name":"The Assumption","ref":"cf. Rev 12:1","fruit":"A Holy Death","med":"Mary is taken up, body and soul, into the glory of heaven."},{"name":"The Coronation of Mary","ref":"cf. Rev 12:1","fruit":"Trust in Mary","med":"Mary is crowned Queen of heaven and earth, our mother and advocate."}]},"luminous":{"name":"Luminous","full":"Luminous Mysteries","days":"Thursday","adj":"Luminous","m":[{"name":"The Baptism in the Jordan","ref":"Matthew 3:16-17","fruit":"Openness to the Spirit","med":"The heavens open and the Father names Jesus his beloved Son."},{"name":"The Wedding at Cana","ref":"John 2:1-11","fruit":"To Jesus through Mary","med":"At Mary's word, do whatever he tells you, Jesus works his first sign."},{"name":"The Proclamation of the Kingdom","ref":"Mark 1:14-15","fruit":"Repentance","med":"Jesus calls all to repent and believe in the good news of the Kingdom."},{"name":"The Transfiguration","ref":"Matthew 17:1-5","fruit":"Desire for Holiness","med":"Christ is transfigured in glory before Peter, James, and John."},{"name":"The Institution of the Eucharist","ref":"Luke 22:19-20","fruit":"Adoration","med":"At the Last Supper Jesus gives his Body and Blood as the bread of life."}]}}},"la":{"label":"Latina","bcp":"la","voice":false,"ui":{"tagline":"granum post granum, per mysteria","todayWord":"Hodie","todayBadge":"Hodie","begin":"Rosarium incipere","resumeWord":"Perge","opening":"Initium","closing":"Orationes finales","virtues":"pro fide, spe et caritate","announce":"Mysterium annuntia","ofWord":"ex","mysteryWord":"Mysterium","mysteryFmt":"{ord} {myst} {adj}","scripture":"Scriptura","fruit":"Fructus mysterii","cont":"Perge","amen":"Amen","endWord":"Exi","backAria":"Oratio praecedens","complete":"Rosarium completum","blessing":"Divinum auxilium maneat semper nobiscum, et animae fidelium defunctorum, per misericordiam Dei, requiescant in pace. Amen.","prayAgain":"Iterum ora","returnHome":"Ad initium redi","the":"","voiceOn":"Vox activa","voiceOff":"Vox inactiva","voiceNone":"Vox non praesto","readAloud":"Legere"},"weekdays":["Dominica","feria secunda","feria tertia","feria quarta","feria quinta","feria sexta","Sabbato"],"ord":["Primum","Secundum","Tertium","Quartum","Quintum"],"seasonNote":{"advent":"Dominicis Adventus mysteria gaudiosa recitantur.","christmas":"Dominicis Nativitatis mysteria gaudiosa recitantur.","lent":"Dominicis Quadragesimae mysteria dolorosa recitantur.","ordinary":"Dominicis per annum mysteria gloriosa recitantur."},"prayers":{"sign":"In nomine Patris, et Filii, et Spiritus Sancti. Amen.","creed":"Credo in Deum, Patrem omnipotentem, Creatorem caeli et terrae. Et in Iesum Christum, Filium eius unicum, Dominum nostrum, qui conceptus est de Spiritu Sancto, natus ex Maria Virgine, passus sub Pontio Pilato, crucifixus, mortuus, et sepultus, descendit ad inferos, tertia die resurrexit a mortuis, ascendit ad caelos, sedet ad dexteram Dei Patris omnipotentis, inde venturus est iudicare vivos et mortuos. Credo in Spiritum Sanctum, sanctam Ecclesiam catholicam, sanctorum communionem, remissionem peccatorum, carnis resurrectionem, vitam aeternam. Amen.","our_father":"Pater noster, qui es in caelis, sanctificetur nomen tuum. Adveniat regnum tuum. Fiat voluntas tua, sicut in caelo et in terra. Panem nostrum quotidianum da nobis hodie, et dimitte nobis debita nostra, sicut et nos dimittimus debitoribus nostris. Et ne nos inducas in tentationem, sed libera nos a malo. Amen.","hail_mary":"Ave Maria, gratia plena, Dominus tecum. Benedicta tu in mulieribus, et benedictus fructus ventris tui, Iesus. Sancta Maria, Mater Dei, ora pro nobis peccatoribus, nunc et in hora mortis nostrae. Amen.","glory":"Gloria Patri, et Filio, et Spiritui Sancto. Sicut erat in principio, et nunc, et semper, et in saecula saeculorum. Amen.","fatima":"O mi Iesu, dimitte nobis debita nostra, libera nos ab igne inferni, conduc in caelum omnes animas, praesertim illas quae maxime indigent misericordia tua. Amen.","salve":"Salve, Regina, Mater misericordiae, vita, dulcedo, et spes nostra, salve. Ad te clamamus, exsules filii Evae. Ad te suspiramus, gementes et flentes in hac lacrimarum valle. Eia ergo, advocata nostra, illos tuos misericordes oculos ad nos converte. Et Iesum, benedictum fructum ventris tui, nobis post hoc exsilium ostende. O clemens, O pia, O dulcis Virgo Maria. Ora pro nobis, sancta Dei Genetrix. Ut digni efficiamur promissionibus Christi. Amen.","closing":"Deus, cuius Unigenitus per vitam, mortem et resurrectionem suam nobis salutis aeternae praemia comparavit: concede, quaesumus; ut haec mysteria sacratissimo beatae Mariae Virginis Rosario recolentes, et imitemur quod continent, et quod promittunt assequamur. Per eundem Christum Dominum nostrum. Amen."},"titles":{"sign":"Signum Crucis","creed":"Symbolum Apostolorum","our_father":"Pater Noster","hail_mary":"Ave Maria","glory":"Gloria Patri","fatima":"Oratio Fatimae","salve":"Salve Regina","closing":"Oratio Finalis"},"sets":{"joyful":{"name":"Gaudiosa","full":"Mysteria Gaudiosa","days":"Lunae et Saturni","adj":"Gaudiosum","m":[{"name":"Annuntiatio","ref":"Lucas 1:26-38","fruit":"Humilitas","med":"Angelus Gabriel Mariam salutat, et illa respondet: fiat mihi secundum verbum tuum."},{"name":"Visitatio","ref":"Lucas 1:39-45","fruit":"Amor proximi","med":"Maria festinat ut Elisabeth ministret, quae eam inter mulieres benedictam proclamat."},{"name":"Nativitas","ref":"Lucas 2:6-12","fruit":"Paupertas spiritus","med":"Christus in paupertate Bethlehem nascitur et in praesepio reponitur."},{"name":"Praesentatio","ref":"Lucas 2:22-32","fruit":"Oboedientia","med":"Puer in Templo praesentatur, et Simeon Deum pro salute sua benedicit."},{"name":"Inventio in Templo","ref":"Lucas 2:46-50","fruit":"Gaudium quaerendi Christum","med":"Post triduum Iesus in Templo inter doctores invenitur."}]},"sorrowful":{"name":"Dolorosa","full":"Mysteria Dolorosa","days":"Martis et Veneris","adj":"Dolorosum","m":[{"name":"Agonia in Horto","ref":"Lucas 22:39-44","fruit":"Contritio","med":"In Gethsemani Iesus in angustia orat, et voluntati Patris se totum tradit."},{"name":"Flagellatio","ref":"Ioannes 19:1","fruit":"Puritas","med":"Christus ligatus et crudeliter flagellatus, pondus peccatorum nostrorum portat."},{"name":"Coronatio Spinis","ref":"Matthaeus 27:27-31","fruit":"Fortitudo","med":"Milites Regem regum spinis coronant et illudunt."},{"name":"Baiulatio Crucis","ref":"Ioannes 19:17","fruit":"Patientia","med":"Iesus Crucem suam tollit et per viam Calvariae portat."},{"name":"Crucifixio","ref":"Lucas 23:33-46","fruit":"Perseverantia","med":"In Cruce Christus spiritum Patri commendat et pro salute nostra moritur."}]},"glorious":{"name":"Gloriosa","full":"Mysteria Gloriosa","days":"Mercurii et Dominica","adj":"Gloriosum","m":[{"name":"Resurrectio","ref":"Matthaeus 28:1-7","fruit":"Fides","med":"Christus a sepulcro resurgit, victor peccati et mortis."},{"name":"Ascensio","ref":"Actus 1:6-11","fruit":"Spes","med":"Iesus in caelum ascendit et ad dexteram Patris sedet."},{"name":"Descensus Spiritus Sancti","ref":"Actus 2:1-4","fruit":"Amor Dei","med":"Spiritus Sanctus super Virginem et Apostolos in Pentecoste descendit."},{"name":"Assumptio","ref":"cf. Apoc 12:1","fruit":"Mors sancta","med":"Maria corpore et anima in caelum assumitur."},{"name":"Coronatio Mariae","ref":"cf. Apoc 12:1","fruit":"Fiducia in Maria","med":"Maria Regina caeli et terrae coronatur, mater et advocata nostra."}]},"luminous":{"name":"Luminosa","full":"Mysteria Luminosa","days":"Iovis","adj":"Luminosum","m":[{"name":"Baptismus in Iordane","ref":"Matthaeus 3:16-17","fruit":"Apertura Spiritui","med":"Caeli aperiuntur et Pater Iesum Filium dilectum nominat."},{"name":"Nuptiae in Cana","ref":"Ioannes 2:1-11","fruit":"Ad Iesum per Mariam","med":"Ad verbum Mariae, quodcumque dixerit vobis facite, Iesus primum signum operatur."},{"name":"Proclamatio Regni","ref":"Marcus 1:14-15","fruit":"Conversio","med":"Iesus omnes vocat ad paenitentiam et ad fidem in Evangelium Regni."},{"name":"Transfiguratio","ref":"Matthaeus 17:1-5","fruit":"Desiderium sanctitatis","med":"Christus in gloria coram Petro, Iacobo et Ioanne transfiguratur."},{"name":"Institutio Eucharistiae","ref":"Lucas 22:19-20","fruit":"Adoratio","med":"In Cena novissima Iesus Corpus et Sanguinem suum dat, panem vitae."}]}}},"es":{"label":"Espa\u00f1ol","bcp":"es-ES","voice":true,"ui":{"tagline":"cuenta a cuenta, por los misterios","todayWord":"Hoy","todayBadge":"Hoy","begin":"Comenzar el Rosario","resumeWord":"Reanudar","opening":"Inicio","closing":"Oraciones finales","virtues":"por la fe, la esperanza y la caridad","announce":"Anuncia el misterio","ofWord":"de","mysteryWord":"Misterio","mysteryFmt":"{ord} {myst} {adj}","scripture":"Escritura","fruit":"Fruto del misterio","cont":"Continuar","amen":"Am\u00e9n","endWord":"Salir","backAria":"Oraci\u00f3n anterior","complete":"Rosario completado","blessing":"La divina asistencia permanezca siempre con nosotros, y las almas de los fieles difuntos, por la misericordia de Dios, descansen en paz. Am\u00e9n.","prayAgain":"Rezar de nuevo","returnHome":"Volver al inicio","the":"Los ","voiceOn":"Voz activada","voiceOff":"Voz desactivada","voiceNone":"Voz no disponible","readAloud":"Leer en voz alta"},"weekdays":["domingo","lunes","martes","mi\u00e9rcoles","jueves","viernes","s\u00e1bado"],"ord":["Primer","Segundo","Tercer","Cuarto","Quinto"],"seasonNote":{"advent":"Los domingos de Adviento se rezan los misterios gozosos.","christmas":"Los domingos de Navidad se rezan los misterios gozosos.","lent":"Los domingos de Cuaresma se rezan los misterios dolorosos.","ordinary":"Los domingos ordinarios se rezan los misterios gloriosos."},"prayers":{"sign":"En el nombre del Padre, y del Hijo, y del Esp\u00edritu Santo. Am\u00e9n.","creed":"Creo en Dios, Padre todopoderoso, Creador del cielo y de la tierra. Creo en Jesucristo, su \u00fanico Hijo, nuestro Se\u00f1or, que fue concebido por obra y gracia del Esp\u00edritu Santo, naci\u00f3 de santa Mar\u00eda Virgen, padeci\u00f3 bajo el poder de Poncio Pilato, fue crucificado, muerto y sepultado, descendi\u00f3 a los infiernos, al tercer d\u00eda resucit\u00f3 de entre los muertos, subi\u00f3 a los cielos y est\u00e1 sentado a la derecha de Dios, Padre todopoderoso. Desde all\u00ed ha de venir a juzgar a vivos y muertos. Creo en el Esp\u00edritu Santo, la santa Iglesia cat\u00f3lica, la comuni\u00f3n de los santos, el perd\u00f3n de los pecados, la resurrecci\u00f3n de la carne y la vida eterna. Am\u00e9n.","our_father":"Padre nuestro, que est\u00e1s en el cielo, santificado sea tu Nombre; venga a nosotros tu reino; h\u00e1gase tu voluntad en la tierra como en el cielo. Danos hoy nuestro pan de cada d\u00eda; perdona nuestras ofensas, como tambi\u00e9n nosotros perdonamos a los que nos ofenden; no nos dejes caer en la tentaci\u00f3n, y l\u00edbranos del mal. Am\u00e9n.","hail_mary":"Dios te salve, Mar\u00eda, llena eres de gracia, el Se\u00f1or es contigo. Bendita t\u00fa eres entre todas las mujeres, y bendito es el fruto de tu vientre, Jes\u00fas. Santa Mar\u00eda, Madre de Dios, ruega por nosotros, pecadores, ahora y en la hora de nuestra muerte. Am\u00e9n.","glory":"Gloria al Padre, y al Hijo, y al Esp\u00edritu Santo. Como era en el principio, ahora y siempre, por los siglos de los siglos. Am\u00e9n.","fatima":"Oh Jes\u00fas m\u00edo, perdona nuestros pecados, l\u00edbranos del fuego del infierno, lleva al cielo a todas las almas, especialmente a las m\u00e1s necesitadas de tu misericordia. Am\u00e9n.","salve":"Dios te salve, Reina y Madre de misericordia, vida, dulzura y esperanza nuestra; Dios te salve. A ti llamamos los desterrados hijos de Eva; a ti suspiramos, gimiendo y llorando, en este valle de l\u00e1grimas. Ea, pues, Se\u00f1ora, abogada nuestra, vuelve a nosotros esos tus ojos misericordiosos; y despu\u00e9s de este destierro mu\u00e9stranos a Jes\u00fas, fruto bendito de tu vientre. Oh clement\u00edsima, oh piadosa, oh dulce Virgen Mar\u00eda. Ruega por nosotros, santa Madre de Dios, para que seamos dignos de alcanzar las promesas de nuestro Se\u00f1or Jesucristo. Am\u00e9n.","closing":"Oh Dios, cuyo Unig\u00e9nito, por su vida, muerte y resurrecci\u00f3n, nos alcanz\u00f3 el premio de la vida eterna; conc\u00e9denos, te rogamos, que meditando estos misterios del sant\u00edsimo Rosario de la bienaventurada Virgen Mar\u00eda, imitemos lo que contienen y alcancemos lo que prometen. Por el mismo Cristo nuestro Se\u00f1or. Am\u00e9n."},"titles":{"sign":"La Se\u00f1al de la Cruz","creed":"El Credo","our_father":"El Padre Nuestro","hail_mary":"El Ave Mar\u00eda","glory":"Gloria","fatima":"Oraci\u00f3n de F\u00e1tima","salve":"La Salve","closing":"Oraci\u00f3n final"},"sets":{"joyful":{"name":"Gozosos","full":"Misterios Gozosos","days":"lun. y s\u00e1b.","adj":"Gozoso","m":[{"name":"La Anunciaci\u00f3n","ref":"Lucas 1:26-38","fruit":"Humildad","med":"El \u00e1ngel Gabriel saluda a Mar\u00eda, y ella responde: h\u00e1gase en m\u00ed seg\u00fan tu palabra."},{"name":"La Visitaci\u00f3n","ref":"Lucas 1:39-45","fruit":"Amor al pr\u00f3jimo","med":"Mar\u00eda se apresura a servir a Isabel, que la proclama bendita entre las mujeres."},{"name":"El Nacimiento","ref":"Lucas 2:6-12","fruit":"Pobreza de esp\u00edritu","med":"Cristo nace pobre en Bel\u00e9n y es recostado en un pesebre."},{"name":"La Presentaci\u00f3n","ref":"Lucas 2:22-32","fruit":"Obediencia","med":"El Ni\u00f1o es presentado en el Templo, y Sime\u00f3n bendice a Dios por su salvaci\u00f3n."},{"name":"El Ni\u00f1o hallado en el Templo","ref":"Lucas 2:46-50","fruit":"Alegr\u00eda de buscar a Cristo","med":"A los tres d\u00edas, Jes\u00fas es hallado en el Templo entre los doctores."}]},"sorrowful":{"name":"Dolorosos","full":"Misterios Dolorosos","days":"mar. y vie.","adj":"Doloroso","m":[{"name":"La Oraci\u00f3n en el Huerto","ref":"Lucas 22:39-44","fruit":"Dolor de los pecados","med":"En Getseman\u00ed Jes\u00fas ora angustiado, y se entrega del todo a la voluntad del Padre."},{"name":"La Flagelaci\u00f3n","ref":"Juan 19:1","fruit":"Pureza","med":"Cristo es atado y cruelmente azotado, cargando el peso de nuestros pecados."},{"name":"La Coronaci\u00f3n de espinas","ref":"Mateo 27:27-31","fruit":"Fortaleza","med":"Los soldados coronan de espinas al Rey de reyes y se burlan de \u00e9l."},{"name":"La Cruz a cuestas","ref":"Juan 19:17","fruit":"Paciencia","med":"Jes\u00fas toma su Cruz y la lleva por el camino del Calvario."},{"name":"La Crucifixi\u00f3n","ref":"Lucas 23:33-46","fruit":"Perseverancia","med":"En la Cruz, Cristo entrega su esp\u00edritu al Padre y muere por nuestra salvaci\u00f3n."}]},"glorious":{"name":"Gloriosos","full":"Misterios Gloriosos","days":"mi\u00e9. y dom.","adj":"Glorioso","m":[{"name":"La Resurrecci\u00f3n","ref":"Mateo 28:1-7","fruit":"Fe","med":"Cristo resucita del sepulcro, vencedor del pecado y de la muerte."},{"name":"La Ascensi\u00f3n","ref":"Hechos 1:6-11","fruit":"Esperanza","med":"Jes\u00fas sube al cielo y se sienta a la derecha del Padre."},{"name":"La Venida del Esp\u00edritu Santo","ref":"Hechos 2:1-4","fruit":"Amor de Dios","med":"El Esp\u00edritu Santo desciende sobre la Virgen y los Ap\u00f3stoles en Pentecost\u00e9s."},{"name":"La Asunci\u00f3n","ref":"cf. Ap 12:1","fruit":"Una santa muerte","med":"Mar\u00eda es llevada al cielo en cuerpo y alma."},{"name":"La Coronaci\u00f3n de Mar\u00eda","ref":"cf. Ap 12:1","fruit":"Confianza en Mar\u00eda","med":"Mar\u00eda es coronada Reina del cielo y de la tierra, madre y abogada nuestra."}]},"luminous":{"name":"Luminosos","full":"Misterios Luminosos","days":"jueves","adj":"Luminoso","m":[{"name":"El Bautismo en el Jord\u00e1n","ref":"Mateo 3:16-17","fruit":"Apertura al Esp\u00edritu","med":"Se abren los cielos y el Padre llama a Jes\u00fas su Hijo amado."},{"name":"Las Bodas de Can\u00e1","ref":"Juan 2:1-11","fruit":"A Jes\u00fas por Mar\u00eda","med":"A la palabra de Mar\u00eda, haced lo que \u00e9l os diga, Jes\u00fas hace su primer signo."},{"name":"El Anuncio del Reino","ref":"Marcos 1:14-15","fruit":"Conversi\u00f3n","med":"Jes\u00fas llama a todos a convertirse y a creer en la buena nueva del Reino."},{"name":"La Transfiguraci\u00f3n","ref":"Mateo 17:1-5","fruit":"Deseo de santidad","med":"Cristo se transfigura en gloria ante Pedro, Santiago y Juan."},{"name":"La Instituci\u00f3n de la Eucarist\u00eda","ref":"Lucas 22:19-20","fruit":"Adoraci\u00f3n","med":"En la \u00daltima Cena Jes\u00fas da su Cuerpo y su Sangre como pan de vida."}]}}},"it":{"label":"Italiano","bcp":"it-IT","voice":true,"ui":{"tagline":"grano dopo grano, attraverso i misteri","todayWord":"Oggi","todayBadge":"Oggi","begin":"Inizia il Rosario","resumeWord":"Riprendi","opening":"Inizio","closing":"Preghiere finali","virtues":"per la fede, la speranza e la carit\u00e0","announce":"Annuncia il mistero","ofWord":"di","mysteryWord":"Mistero","mysteryFmt":"{ord} {myst} {adj}","scripture":"Scrittura","fruit":"Frutto del mistero","cont":"Continua","amen":"Amen","endWord":"Esci","backAria":"Preghiera precedente","complete":"Rosario completato","blessing":"Il divino aiuto rimanga sempre con noi, e le anime dei fedeli defunti, per la misericordia di Dio, riposino in pace. Amen.","prayAgain":"Prega di nuovo","returnHome":"Torna all'inizio","the":"I ","voiceOn":"Voce attiva","voiceOff":"Voce disattivata","voiceNone":"Voce non disponibile","readAloud":"Leggi ad alta voce"},"weekdays":["domenica","luned\u00ec","marted\u00ec","mercoled\u00ec","gioved\u00ec","venerd\u00ec","sabato"],"ord":["Primo","Secondo","Terzo","Quarto","Quinto"],"seasonNote":{"advent":"Le domeniche d'Avvento si pregano i misteri gaudiosi.","christmas":"Le domeniche del tempo di Natale si pregano i misteri gaudiosi.","lent":"Le domeniche di Quaresima si pregano i misteri dolorosi.","ordinary":"Le domeniche ordinarie si pregano i misteri gloriosi."},"prayers":{"sign":"Nel nome del Padre, del Figlio e dello Spirito Santo. Amen.","creed":"Io credo in Dio, Padre onnipotente, Creatore del cielo e della terra; e in Ges\u00f9 Cristo, Suo unico Figlio, nostro Signore, il quale fu concepito di Spirito Santo, nacque da Maria Vergine, pat\u00ec sotto Ponzio Pilato, fu crocifisso, mor\u00ec e fu sepolto; discese agli inferi; il terzo giorno risuscit\u00f2 da morte; sal\u00ec al cielo, siede alla destra di Dio, Padre onnipotente; di l\u00e0 verr\u00e0 a giudicare i vivi e i morti. Credo nello Spirito Santo, la santa Chiesa cattolica, la comunione dei santi, la remissione dei peccati, la risurrezione della carne, la vita eterna. Amen.","our_father":"Padre nostro, che sei nei cieli, sia santificato il tuo nome, venga il tuo regno, sia fatta la tua volont\u00e0, come in cielo cos\u00ec in terra. Dacci oggi il nostro pane quotidiano, e rimetti a noi i nostri debiti come noi li rimettiamo ai nostri debitori, e non abbandonarci alla tentazione, ma liberaci dal male. Amen.","hail_mary":"Ave, o Maria, piena di grazia, il Signore \u00e8 con te. Tu sei benedetta fra le donne e benedetto \u00e8 il frutto del tuo seno, Ges\u00f9. Santa Maria, Madre di Dio, prega per noi peccatori, adesso e nell'ora della nostra morte. Amen.","glory":"Gloria al Padre e al Figlio e allo Spirito Santo. Come era nel principio, e ora e sempre, nei secoli dei secoli. Amen.","fatima":"Ges\u00f9 mio, perdona le nostre colpe, preservaci dal fuoco dell'inferno, porta in cielo tutte le anime, specialmente le pi\u00f9 bisognose della tua misericordia. Amen.","salve":"Salve, Regina, Madre di misericordia; vita, dolcezza e speranza nostra, salve. A te ricorriamo, noi esuli figli di Eva; a te sospiriamo, gementi e piangenti in questa valle di lacrime. Ors\u00f9 dunque, avvocata nostra, rivolgi a noi gli occhi tuoi misericordiosi. E mostraci, dopo questo esilio, Ges\u00f9, il frutto benedetto del tuo seno. O clemente, o pia, o dolce Vergine Maria. Prega per noi, santa Madre di Dio. Affinch\u00e9 siamo resi degni delle promesse di Cristo. Amen.","closing":"O Dio, il tuo Unigenito Figlio, con la sua vita, morte e risurrezione, ci ha meritato i premi della vita eterna; concedi a noi, te ne preghiamo, che, meditando questi misteri del santissimo Rosario della beata Vergine Maria, imitiamo ci\u00f2 che contengono e conseguiamo ci\u00f2 che promettono. Per Cristo nostro Signore. Amen."},"titles":{"sign":"Segno della Croce","creed":"Credo Apostolico","our_father":"Padre Nostro","hail_mary":"Ave Maria","glory":"Gloria al Padre","fatima":"Preghiera di Fatima","salve":"Salve Regina","closing":"Preghiera finale"},"sets":{"joyful":{"name":"Gaudiosi","full":"Misteri Gaudiosi","days":"lun. e sab.","adj":"Gaudioso","m":[{"name":"L'Annunciazione","ref":"Luca 1:26-38","fruit":"Umilt\u00e0","med":"L'angelo Gabriele saluta Maria, ed ella risponde: avvenga di me secondo la tua parola."},{"name":"La Visitazione","ref":"Luca 1:39-45","fruit":"Amore del prossimo","med":"Maria si affretta a servire Elisabetta, che la proclama benedetta fra le donne."},{"name":"La Nativit\u00e0","ref":"Luca 2:6-12","fruit":"Povert\u00e0 di spirito","med":"Cristo nasce povero a Betlemme ed \u00e8 deposto in una mangiatoia."},{"name":"La Presentazione","ref":"Luca 2:22-32","fruit":"Obbedienza","med":"Il Bambino \u00e8 presentato al Tempio, e Simeone benedice Dio per la sua salvezza."},{"name":"Il Ritrovamento al Tempio","ref":"Luca 2:46-50","fruit":"Gioia di cercare Cristo","med":"Dopo tre giorni Ges\u00f9 \u00e8 ritrovato nel Tempio in mezzo ai dottori."}]},"sorrowful":{"name":"Dolorosi","full":"Misteri Dolorosi","days":"mar. e ven.","adj":"Doloroso","m":[{"name":"L'Agonia nell'Orto","ref":"Luca 22:39-44","fruit":"Dolore dei peccati","med":"Nel Getsemani Ges\u00f9 prega nell'angoscia, e si abbandona del tutto alla volont\u00e0 del Padre."},{"name":"La Flagellazione","ref":"Giovanni 19:1","fruit":"Purezza","med":"Cristo \u00e8 legato e crudelmente flagellato, portando il peso dei nostri peccati."},{"name":"L'Incoronazione di spine","ref":"Matteo 27:27-31","fruit":"Fortezza","med":"I soldati coronano di spine il Re dei re e lo deridono."},{"name":"La Salita al Calvario","ref":"Giovanni 19:17","fruit":"Pazienza","med":"Ges\u00f9 prende la sua Croce e la porta lungo la via del Calvario."},{"name":"La Crocifissione","ref":"Luca 23:33-46","fruit":"Perseveranza","med":"Sulla Croce Cristo consegna il suo spirito al Padre e muore per la nostra salvezza."}]},"glorious":{"name":"Gloriosi","full":"Misteri Gloriosi","days":"mer. e dom.","adj":"Glorioso","m":[{"name":"La Risurrezione","ref":"Matteo 28:1-7","fruit":"Fede","med":"Cristo risorge dal sepolcro, vincitore del peccato e della morte."},{"name":"L'Ascensione","ref":"Atti 1:6-11","fruit":"Speranza","med":"Ges\u00f9 sale al cielo e siede alla destra del Padre."},{"name":"La Discesa dello Spirito Santo","ref":"Atti 2:1-4","fruit":"Amore di Dio","med":"Lo Spirito Santo discende sulla Vergine e sugli Apostoli a Pentecoste."},{"name":"L'Assunzione","ref":"cf. Ap 12:1","fruit":"Una santa morte","med":"Maria \u00e8 assunta in cielo in corpo e anima."},{"name":"L'Incoronazione di Maria","ref":"cf. Ap 12:1","fruit":"Fiducia in Maria","med":"Maria \u00e8 incoronata Regina del cielo e della terra, madre e avvocata nostra."}]},"luminous":{"name":"Luminosi","full":"Misteri Luminosi","days":"gioved\u00ec","adj":"Luminoso","m":[{"name":"Il Battesimo al Giordano","ref":"Matteo 3:16-17","fruit":"Apertura allo Spirito","med":"Si aprono i cieli e il Padre chiama Ges\u00f9 il suo Figlio amato."},{"name":"Le Nozze di Cana","ref":"Giovanni 2:1-11","fruit":"A Ges\u00f9 per Maria","med":"Alla parola di Maria, fate quello che vi dir\u00e0, Ges\u00f9 compie il suo primo segno."},{"name":"L'Annuncio del Regno","ref":"Marco 1:14-15","fruit":"Conversione","med":"Ges\u00f9 chiama tutti a convertirsi e a credere al lieto annuncio del Regno."},{"name":"La Trasfigurazione","ref":"Matteo 17:1-5","fruit":"Desiderio di santit\u00e0","med":"Cristo si trasfigura nella gloria davanti a Pietro, Giacomo e Giovanni."},{"name":"L'Istituzione dell'Eucaristia","ref":"Luca 22:19-20","fruit":"Adorazione","med":"Nell'Ultima Cena Ges\u00f9 dona il suo Corpo e il suo Sangue come pane di vita."}]}}}};function L(){ return I18N[state.lang] || I18N.en; }
 
 // weekday to set: Sun..Sat
 var WEEKDAY = ["glorious","joyful","sorrowful","glorious","luminous","sorrowful","joyful"];
@@ -331,13 +316,6 @@ function seasonSet(season){
 function todaysSet(date){
   return (date.getDay() === 0) ? seasonSet(sundaySeason(date)) : WEEKDAY[date.getDay()];
 }
-var SEASON_NOTE = {
-  advent:    "Sundays of Advent take the Joyful Mysteries.",
-  christmas: "Sundays of Christmastide take the Joyful Mysteries.",
-  lent:      "Sundays of Lent take the Sorrowful Mysteries.",
-  ordinary:  "Ordinary Sundays take the Glorious Mysteries."
-};
-var ORD = ["First","Second","Third","Fourth","Fifth"];
 var STORE_KEY = "appaday-080-rosary";
 
 // ============================================================
@@ -377,53 +355,48 @@ function loopOfIndex(d){ return 10 + (d - 2) * 11; }  // loop index of the Our F
 //  BUILD THE LINEAR STEP SEQUENCE FOR A CHOSEN SET
 // ============================================================
 function buildSteps(setKey){
-  var set = SETS[setKey];
+  var T = L(), U = T.ui, P = T.prayers, TT = T.titles, ORDS = T.ord;
+  var set = T.sets[setKey];
   var steps = [];
 
-  // opening
-  steps.push(mk("Opening", "", "The Sign of the Cross", "", PRAYERS.sign, O_CRUCIFIX, O_CRUCIFIX, false, null));
-  steps.push(mk("Opening", "", "The Apostles' Creed", "", PRAYERS.creed, O_CRUCIFIX, O_CRUCIFIX, false, null));
-  steps.push(mk("Opening", "", "The Our Father", "", PRAYERS.our_father, O_TAIL_OF, O_TAIL_OF, false, null));
+  // ---- Opening ----
+  steps.push(mk(U.opening, "", TT.sign, "", P.sign, O_CRUCIFIX, O_CRUCIFIX, false, null));
+  steps.push(mk(U.opening, "", TT.creed, "", P.creed, O_CRUCIFIX, O_CRUCIFIX, false, null));
+  steps.push(mk(U.opening, "", TT.our_father, "", P.our_father, O_TAIL_OF, O_TAIL_OF, false, null));
   for (var h = 0; h < 3; h++){
-    steps.push(mk("Opening", "for faith, hope, and charity", "Hail Mary", (h+1) + " of 3", PRAYERS.hail_mary, O_TAIL_HM[h], O_TAIL_HM[h], false, null));
+    steps.push(mk(U.opening, U.virtues, TT.hail_mary, (h+1)+" "+U.ofWord+" 3", P.hail_mary, O_TAIL_HM[h], O_TAIL_HM[h], false, null));
   }
-  steps.push(mk("Opening", "", "Glory Be", "", PRAYERS.glory, O_TAIL_HM[2], O_TAIL_HM[2], false, null));
+  steps.push(mk(U.opening, "", TT.glory, "", P.glory, O_TAIL_HM[2], O_TAIL_HM[2], false, null));
 
-  // five decades. Decade 1's Our Father is the tail bead above the three Hail Marys, and its
-  // ten Hail Marys begin the loop. Decades 2-5 sit wholly on the loop.
+  // ---- Five decades ----
   for (var d = 1; d <= 5; d++){
     var mystery = set.m[d-1];
-    var place = ORD[d-1] + " " + set.name + " Mystery";
-    var meta = { ref: mystery.ref, fruit: mystery.fruit };
-
+    var place = U.mysteryFmt.replace("{ord}", ORDS[d-1]).replace("{myst}", U.mysteryWord).replace("{adj}", set.adj);
     var ofOrder, hm0;
     if (d === 1){ ofOrder = O_DEC1_OF; hm0 = O_LOOP0; }
     else { ofOrder = loopOrder(loopOfIndex(d)); hm0 = ofOrder + 1; }
     var lastHm = hm0 + 9;
 
-    // announce
-    var st = mk(place, "", mystery.name, "Announce the mystery", mystery.med, ofOrder, ofOrder, false, mystery.name);
-    st.meta = meta; st.big = true;
-    steps.push(st);
-    // our father
-    steps.push(mk(place, mystery.name, "The Our Father", "", PRAYERS.our_father, ofOrder, ofOrder, false, mystery.name));
-    // ten hail marys
+    var announce = mk(place, "", mystery.name, U.announce, mystery.med, ofOrder, ofOrder, false, mystery.name);
+    announce.meta = { ref: mystery.ref, fruit: mystery.fruit };
+    announce.big = true;
+    steps.push(announce);
+
+    steps.push(mk(place, mystery.name, TT.our_father, "", P.our_father, ofOrder, ofOrder, false, mystery.name));
     for (var k = 0; k < 10; k++){
-      steps.push(mk(place, mystery.name, "Hail Mary", (k+1) + " of 10", PRAYERS.hail_mary, hm0 + k, hm0 + k, false, mystery.name));
+      steps.push(mk(place, mystery.name, TT.hail_mary, (k+1)+" "+U.ofWord+" 10", P.hail_mary, hm0+k, hm0+k, false, mystery.name));
     }
-    // glory + fatima (on the last Hail Mary bead of the decade)
-    steps.push(mk(place, mystery.name, "Glory Be", "", PRAYERS.glory, lastHm, lastHm, false, mystery.name));
-    steps.push(mk(place, mystery.name, "Fatima Prayer", "", PRAYERS.fatima, lastHm, lastHm, false, mystery.name));
+    steps.push(mk(place, mystery.name, TT.glory, "", P.glory, lastHm, lastHm, false, mystery.name));
+    steps.push(mk(place, mystery.name, TT.fatima, "", P.fatima, lastHm, lastHm, false, mystery.name));
   }
 
-  // closing
-  steps.push(mk("Closing Prayers", "", "Hail, Holy Queen", "", PRAYERS.salve, DONE_ALL, O_MEDAL, true, null));
-  steps.push(mk("Closing Prayers", "", "Closing Prayer", "", PRAYERS.closing, DONE_ALL, O_MEDAL, true, null));
-  steps.push(mk("Closing Prayers", "", "The Sign of the Cross", "", PRAYERS.sign, DONE_ALL, O_CRUCIFIX, true, null));
+  // ---- Closing ----
+  steps.push(mk(U.closing, "", TT.salve, "", P.salve, DONE_ALL, O_MEDAL, true, null));
+  steps.push(mk(U.closing, "", TT.closing, "", P.closing, DONE_ALL, O_MEDAL, true, null));
+  steps.push(mk(U.closing, "", TT.sign, "", P.sign, DONE_ALL, O_CRUCIFIX, true, null));
 
   return steps;
 }
-
 function mk(place, context, title, sub, text, cur, pulse, doneAll, ctxName){
   return { place:place, context:context, title:title, sub:sub, text:text,
            cur:cur, pulse:pulse, doneAll:doneAll, meta:null, big:false };
@@ -530,7 +503,7 @@ function paintRing(step){
 // ============================================================
 //  APP STATE + FLOW
 // ============================================================
-var state = { setKey:null, steps:[], i:0 };
+var state = { setKey:null, steps:[], i:0, lang:"en", voice:false };
 
 function screen(id){
   var all = document.querySelectorAll(".screen");
@@ -538,6 +511,7 @@ function screen(id){
   document.getElementById(id).classList.add("on");
   var act = document.getElementById("topAct");
   act.style.visibility = (id === "pray") ? "visible" : "hidden";
+  updateVoiceUI();
 }
 
 function startSet(setKey, resumeAt){
@@ -572,8 +546,8 @@ function render(){
   var meta = document.getElementById("pmeta");
   if (step.meta){
     meta.style.display = "flex";
-    meta.innerHTML = "<span>Scripture <b>" + step.meta.ref + "</b></span>" +
-                     "<span>Fruit of the Mystery <b>" + step.meta.fruit + "</b></span>";
+    meta.innerHTML = "<span>" + L().ui.scripture + " <b>" + step.meta.ref + "</b></span>" +
+                     "<span>" + L().ui.fruit + " <b>" + step.meta.fruit + "</b></span>";
   } else { meta.style.display = "none"; }
 
   paintRing(step);
@@ -582,8 +556,9 @@ function render(){
   document.getElementById("progFill").style.width = ((state.i + 1) / total * 100) + "%";
   document.getElementById("count").textContent = (state.i + 1) + " / " + total;
   document.getElementById("backBtn").disabled = state.i === 0;
-  document.getElementById("nextBtn").textContent = (state.i === total - 1) ? "Amen" : "Continue";
+  document.getElementById("nextBtn").textContent = (state.i === total - 1) ? L().ui.amen : L().ui.cont;
 
+  speakCurrent();
   save();
 }
 
@@ -597,7 +572,7 @@ function back(){
 }
 function finish(){
   clearSave();
-  document.getElementById("doneSet").textContent = "The " + SETS[state.setKey].full;
+  document.getElementById("doneSet").textContent = L().ui.the + L().sets[state.setKey].full;
   screen("done");
 }
 
@@ -610,7 +585,7 @@ function todayISO(){
 }
 function save(){
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({ set:state.setKey, i:state.i, date:todayISO() }));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ set:state.setKey, i:state.i, lang:state.lang, date:todayISO() }));
   } catch(e){}
 }
 function clearSave(){
@@ -621,7 +596,7 @@ function loadSave(){
     var raw = localStorage.getItem(STORE_KEY);
     if (!raw) return null;
     var s = JSON.parse(raw);
-    if (!s || !SETS[s.set] || s.i <= 0) return null;
+    if (!s || !I18N.en.sets[s.set] || s.i <= 0) return null;
     return s;
   } catch(e){ return null; }
 }
@@ -632,29 +607,30 @@ function loadSave(){
 var selectedSet = null;
 
 function weekdayName(){
-  return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+  return L().weekdays[new Date().getDay()];
 }
 
 function buildHome(){
   var now = new Date();
   var todaysKey = todaysSet(now);
-  selectedSet = todaysKey;
+  if (!selectedSet) selectedSet = todaysKey;
+  var U = L().ui;
 
-  document.getElementById("todayWk").textContent = "Today, " + weekdayName();
-  document.getElementById("todayLine").innerHTML = "The <em>" + SETS[todaysKey].full + "</em>";
-  document.getElementById("todayNote").textContent = (now.getDay() === 0) ? SEASON_NOTE[sundaySeason(now)] : "";
+  document.getElementById("todayWk").textContent = U.todayWord + ", " + weekdayName();
+  document.getElementById("todayLine").innerHTML = U.the + "<em>" + L().sets[todaysKey].full + "</em>";
+  document.getElementById("todayNote").textContent = (now.getDay() === 0) ? L().seasonNote[sundaySeason(now)] : "";
 
   var grid = document.getElementById("setGrid");
   grid.innerHTML = "";
   var order = ["joyful","luminous","sorrowful","glorious"];
   for (var q = 0; q < order.length; q++){
     (function(key){
-      var set = SETS[key];
+      var set = L().sets[key];
       var card = document.createElement("button");
       card.type = "button";
       card.className = "set-card";
       card.setAttribute("aria-pressed", key === selectedSet ? "true" : "false");
-      var badge = (key === todaysKey) ? '<span class="badge">Today</span>' : '';
+      var badge = (key === todaysKey) ? '<span class="badge">' + U.todayBadge + '</span>' : '';
       card.innerHTML = badge + '<div class="sname">' + set.name + '</div><div class="sdays">' + set.days + '</div>';
       card.addEventListener("click", function(){ selectSet(key); });
       grid.appendChild(card);
@@ -675,8 +651,8 @@ function selectSet(key){
 }
 
 function paintPreview(){
-  var set = SETS[selectedSet];
-  document.getElementById("previewHead").textContent = "The " + set.full;
+  var set = L().sets[selectedSet];
+  document.getElementById("previewHead").textContent = L().ui.the + set.full;
   var ol = document.getElementById("previewList");
   ol.innerHTML = "";
   for (var m = 0; m < set.m.length; m++){
@@ -690,11 +666,151 @@ function refreshResume(){
   var saved = loadSave();
   var btn = document.getElementById("resumeBtn");
   if (!saved){ btn.style.display = "none"; return; }
+  var full = L().sets[saved.set].full;
   var steps = buildSteps(saved.set);
   var place = steps[saved.i] ? steps[saved.i].place : "";
   btn.style.display = "block";
-  btn.innerHTML = "Resume the " + SETS[saved.set].full + "<small>" + place + "</small>";
-  btn.onclick = function(){ startSet(saved.set, saved.i); };
+  btn.innerHTML = L().ui.resumeWord + ": " + full + "<small>" + place + "</small>";
+  btn.onclick = function(){
+    if (saved.lang && I18N[saved.lang]){ state.lang = saved.lang; setLangChips(); applyStaticLang(); }
+    startSet(saved.set, saved.i);
+  };
+}
+
+// ============================================================
+//  LANGUAGE + VOICE
+// ============================================================
+function applyStaticLang(){
+  var U = L().ui;
+  document.getElementById("tagline").textContent = U.tagline;
+  document.getElementById("beginBtn").textContent = U.begin;
+  document.getElementById("topAct").textContent = U.endWord;
+  document.getElementById("backBtn").setAttribute("aria-label", U.backAria);
+  document.getElementById("doneTitle").textContent = U.complete;
+  document.getElementById("doneBless").textContent = U.blessing;
+  document.getElementById("againBtn").textContent = U.prayAgain;
+  document.getElementById("homeBtn").textContent = U.returnHome;
+  var vb = document.getElementById("voiceBtn");
+  if (vb) vb.setAttribute("aria-label", U.readAloud);
+  try { document.documentElement.setAttribute("lang", L().bcp.split("-")[0]); } catch(e){}
+  updateVoiceUI();
+}
+
+function buildLangUI(){
+  var row = document.getElementById("langRow");
+  row.innerHTML = "";
+  for (var i = 0; i < LANGS.length; i++){
+    (function(code){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "lang-chip";
+      b.textContent = I18N[code].label;
+      b.setAttribute("aria-pressed", code === state.lang ? "true" : "false");
+      b.addEventListener("click", function(){ setLang(code); });
+      row.appendChild(b);
+    })(LANGS[i]);
+  }
+}
+function setLangChips(){
+  var chips = document.querySelectorAll(".lang-chip");
+  for (var i = 0; i < chips.length && i < LANGS.length; i++){
+    chips[i].setAttribute("aria-pressed", LANGS[i] === state.lang ? "true" : "false");
+  }
+}
+function setLang(code){
+  if (!I18N[code]) return;
+  state.lang = code;
+  savePrefs();
+  setLangChips();
+  applyStaticLang();
+  buildHome();
+}
+
+var VOICE_OK = (typeof window !== "undefined") && ("speechSynthesis" in window) && (typeof SpeechSynthesisUtterance !== "undefined");
+var VOICES = [];
+function loadVoices(){ try { VOICES = window.speechSynthesis.getVoices() || []; } catch(e){ VOICES = []; } }
+if (VOICE_OK){
+  loadVoices();
+  try { window.speechSynthesis.onvoiceschanged = function(){ loadVoices(); updateVoiceUI(); }; } catch(e){}
+}
+function pickVoice(bcp){
+  if (!VOICES.length) loadVoices();
+  var pref = (bcp || "").toLowerCase(), base = pref.split("-")[0], baseMatch = null;
+  for (var i = 0; i < VOICES.length; i++){
+    var vl = (VOICES[i].lang || "").toLowerCase().replace("_", "-");
+    if (vl === pref) return VOICES[i];
+    if (!baseMatch && vl.split("-")[0] === base) baseMatch = VOICES[i];
+  }
+  return baseMatch;
+}
+function langHasVoice(code){
+  var m = I18N[code];
+  return !!(VOICE_OK && m && m.voice && pickVoice(m.bcp));
+}
+function toggleVoice(){
+  if (!VOICE_OK || !L().voice) return;
+  state.voice = !state.voice;
+  savePrefs();
+  updateVoiceUI();
+  if (state.voice){ speakCurrent(); }
+  else { try { window.speechSynthesis.cancel(); } catch(e){} }
+}
+function updateVoiceUI(){
+  var U = L().ui;
+  var t = document.getElementById("voiceToggle");
+  var vb = document.getElementById("voiceBtn");
+  if (t){
+    if (!VOICE_OK){ t.style.display = "none"; }
+    else {
+      t.style.display = "";
+      if (!L().voice || !langHasVoice(state.lang)){
+        t.disabled = true; t.classList.remove("on");
+        t.textContent = U.voiceNone; t.setAttribute("aria-pressed", "false");
+      } else {
+        t.disabled = false;
+        t.textContent = state.voice ? U.voiceOn : U.voiceOff;
+        t.setAttribute("aria-pressed", state.voice ? "true" : "false");
+        t.classList.toggle("on", state.voice);
+      }
+    }
+  }
+  if (vb){
+    var onPray = document.getElementById("pray").classList.contains("on");
+    var show = onPray && VOICE_OK && L().voice && langHasVoice(state.lang);
+    vb.style.display = show ? "inline-flex" : "none";
+    vb.setAttribute("aria-pressed", state.voice ? "true" : "false");
+    vb.classList.toggle("on", state.voice);
+  }
+}
+function speakCurrent(){
+  if (!VOICE_OK || !state.voice) return;
+  var T = L();
+  if (!T.voice) return;
+  var v = pickVoice(T.bcp);
+  if (!v) return;
+  var step = state.steps[state.i];
+  if (!step) return;
+  var text = step.big ? (step.title + ". " + step.text) : step.text;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.voice = v; u.lang = v.lang; u.rate = 0.92;
+    window.speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+var PREF_KEY = "appaday-080-prefs";
+function savePrefs(){
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ lang: state.lang, voice: state.voice })); } catch(e){}
+}
+function loadPrefs(){
+  try {
+    var raw = localStorage.getItem(PREF_KEY);
+    if (!raw) return;
+    var p = JSON.parse(raw);
+    if (p && I18N[p.lang]) state.lang = p.lang;
+    if (p && typeof p.voice === "boolean") state.voice = p.voice;
+  } catch(e){}
 }
 
 // ============================================================
@@ -706,6 +822,8 @@ document.getElementById("backBtn").addEventListener("click", back);
 document.getElementById("topAct").addEventListener("click", function(){ screen("home"); refreshResume(); });
 document.getElementById("againBtn").addEventListener("click", function(){ startSet(state.setKey, 0); });
 document.getElementById("homeBtn").addEventListener("click", function(){ screen("home"); buildHome(); });
+document.getElementById("voiceToggle").addEventListener("click", toggleVoice);
+document.getElementById("voiceBtn").addEventListener("click", toggleVoice);
 
 document.addEventListener("keydown", function(e){
   if (!document.getElementById("pray").classList.contains("on")) return;
@@ -730,6 +848,9 @@ document.addEventListener("keydown", function(e){
   }, {passive:true});
 })();
 
+loadPrefs();
+buildLangUI();
+applyStaticLang();
 buildHome();
 </script>
 </body>
