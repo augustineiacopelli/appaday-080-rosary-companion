@@ -2,7 +2,7 @@
 
 App No. 080 in the [AppADay](https://augustineiacopelli.github.io/appaday/) project.
 
-A guided rosary that walks you bead by bead through the whole devotion, from the opening Sign of the Cross and Apostles' Creed, through the Our Father, three Hail Marys, and Glory Be, into five full decades, and out through the closing Hail Holy Queen, final prayer, and Sign of the Cross. Each bead shows the prayer to say and, during the decades, the mystery to contemplate, its scripture, and its traditional fruit. You move forward one prayer at a time and the rosary fills as you go.
+A guided rosary that walks you bead by bead through the whole devotion, from the opening Sign of the Cross and Apostles' Creed, through the Our Father, three Hail Marys, Glory Be, and Fatima Prayer, into five full decades, and out through the closing Hail Holy Queen, final prayer, and Sign of the Cross. The Fatima Prayer is prayed after the opening Glory Be and again after each decade. Each bead shows the prayer to say and, during the decades, the mystery to contemplate, its scripture, and its traditional fruit. You move forward one prayer at a time and the rosary fills as you go.
 
 ## Choosing the mysteries
 
