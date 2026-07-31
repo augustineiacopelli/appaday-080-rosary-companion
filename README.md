@@ -26,6 +26,8 @@ The whole devotion is available in four languages: English, Latin, Spanish, and 
 
 When the device offers a matching voice, a read-aloud toggle appears and a small speaker button sits in the corner of the prayer screen, speaking each prayer as you arrive on it. Speech uses the voices already built into the device, so it is offered only where one exists. English, Spanish, and Italian are supported this way; Latin is presented as text only, since devices do not carry a Latin voice. On a phone, reading aloud is most reliable in the browser itself. Some devices restrict speech when the app is launched from a home-screen icon, and in that case the toggle steps aside quietly and the rest of the app is unaffected.
 
+With reading aloud switched on, an auto-advance option becomes available beside it. Once enabled, each prayer moves to the next on its own a short moment after it finishes being spoken, so a whole rosary can be prayed hands-free. It stops at the closing prayer and waits for you to end the rosary yourself, and it steps aside for any language without a voice, since there is nothing to advance from. Your language, read-aloud, and auto-advance choices are all remembered for next time.
+
 ## Using it
 
 Tap Continue, press the right arrow or spacebar, or swipe forward to move to the next prayer. Go back the same way with the left arrow or a swipe. The filling bead ring shows your place at a glance, with the current bead lit in gold and the beads already prayed settled into blue. If you step away, your progress is saved, and the home screen offers to resume where you left off.
