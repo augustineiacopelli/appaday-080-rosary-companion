@@ -241,7 +241,7 @@
       <div class="navbar">
         <button class="nav-btn" id="backBtn" type="button" aria-label="Previous prayer">&#8592;</button>
         <div class="progress"><i id="progFill"></i></div>
-        <span class="count" id="count">1 / 80</span>
+        <span class="count" id="count">1 / 81</span>
         <button class="nav-btn nav-next" id="nextBtn" type="button">Continue</button>
       </div>
     </div>
@@ -260,7 +260,7 @@
   </section>
 
   <div class="footer">
-    Part of <a href="https://augustineiacopelli.github.io/appaday/">AppADay</a> &middot; No. 080 &middot; build 2
+    Part of <a href="https://augustineiacopelli.github.io/appaday/">AppADay</a> &middot; No. 080 &middot; build 3
   </div>
 </div>
 
@@ -368,6 +368,7 @@ function buildSteps(setKey){
     steps.push(mk(U.opening, U.virtues, TT.hail_mary, (h+1)+" "+U.ofWord+" 3", P.hail_mary, O_TAIL_HM[h], O_TAIL_HM[h], false, null));
   }
   steps.push(mk(U.opening, "", TT.glory, "", P.glory, O_TAIL_HM[2], O_TAIL_HM[2], false, null));
+  steps.push(mk(U.opening, "", TT.fatima, "", P.fatima, O_TAIL_HM[2], O_TAIL_HM[2], false, null));
 
   // ---- Five decades ----
   for (var d = 1; d <= 5; d++){
